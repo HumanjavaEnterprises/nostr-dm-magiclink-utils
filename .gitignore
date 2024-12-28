@@ -9,10 +9,19 @@ dist/
 build/
 *.tsbuildinfo
 
+# Documentation
+docs/
+
 # Environment variables
 .env
 .env.local
 .env.*.local
+
+# Sensitive data
+.keys/
+*.key
+*.pem
+*.secret
 
 # IDE and editor files
 .idea/
