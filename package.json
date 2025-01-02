@@ -1,7 +1,7 @@
 {
   "name": "nostr-dm-magiclink-utils",
   "version": "0.1.0",
-  "description": "Lightweight, internationalized Nostr DM magic link generator. Focuses on crafting and sending localized magic link messages via Nostr DMs, with support for multiple languages and RTL/LTR text direction.",
+  "description": "A comprehensive Nostr utility library for magic link authentication via direct messages. Features include NIP-01/04 compliant message encryption, multi-relay support, internationalization (i18n) with RTL support, and TypeScript-first development. Ideal for building secure, user-friendly authentication flows in Nostr applications.",
   "author": "vveerrgg",
   "license": "MIT",
   "type": "module",
