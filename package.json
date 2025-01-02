@@ -1,13 +1,13 @@
 {
   "name": "nostr-dm-magiclink-utils",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A comprehensive Nostr utility library for magic link authentication via direct messages. Features include NIP-01/04 compliant message encryption, multi-relay support, internationalization (i18n) with RTL support, and TypeScript-first development. Ideal for building secure, user-friendly authentication flows in Nostr applications.",
   "author": "vveerrgg",
   "license": "MIT",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/HumanjavaEnterprises/nostr-dm-magiclink-utils.git"
+    "url": "git+https://github.com/HumanjavaEnterprises/nostr-dm-magiclink-utils.git"
   },
   "bugs": {
     "url": "https://github.com/HumanjavaEnterprises/nostr-dm-magiclink-utils/issues"
@@ -32,7 +32,7 @@
   "exports": {
     ".": {
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
+      "require": "./dist/cjs/index.js",
       "types": "./dist/index.d.ts"
     },
     "./services/*": {

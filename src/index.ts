@@ -1,7 +1,7 @@
-import { NostrService } from './services/nostr.service';
-import { MagicLinkService } from './services/magiclink.service';
-import { NostrMagicLinkConfig } from './types/config';
-import { createLogger } from './utils/logger';
+import { NostrService } from './services/nostr.service.js';
+import { MagicLinkService } from './services/magiclink.service.js';
+import { NostrMagicLinkConfig } from './types/config.js';
+import { createLogger } from './utils/logger.js';
 
 const logger = createLogger('nostr-dm-magiclink-utils');
 
@@ -20,25 +20,12 @@ export function createMagicLinkService(config: NostrMagicLinkConfig): MagicLinkS
     throw new Error('Verify URL is required');
   }
 
-  if (!config.nostr.privateKey) {
-    throw new Error('Nostr private key is required');
-  }
-
-  if (!config.nostr.relayUrls || config.nostr.relayUrls.length === 0) {
-    throw new Error('At least one relay URL is required');
-  }
-
-  // Create services
+  logger.info('Creating magic link service');
   const nostrService = new NostrService(config.nostr);
-  const magicLinkService = new MagicLinkService(
-    nostrService,
-    config.magicLink
-  );
-
-  logger.info('Magic link service created successfully');
-
-  return magicLinkService;
+  return new MagicLinkService(nostrService, config.magicLink);
 }
 
 // Export types
-export * from './types';
+export * from './types/index.js';
+export * from './services/nostr.service.js';
+export * from './services/magiclink.service.js';
