@@ -1,10 +1,12 @@
 {
   "name": "nostr-dm-magiclink-utils",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "A comprehensive Nostr utility library for magic link authentication via direct messages. Features include NIP-01/04 compliant message encryption, multi-relay support, internationalization (i18n) with RTL support, and TypeScript-first development. Ideal for building secure, user-friendly authentication flows in Nostr applications.",
   "author": "vveerrgg",
   "license": "MIT",
   "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/HumanjavaEnterprises/nostr-dm-magiclink-utils.git"
@@ -14,46 +16,36 @@
   },
   "homepage": "https://github.com/HumanjavaEnterprises/nostr-dm-magiclink-utils#readme",
   "scripts": {
-    "build": "tsc && tsc -p tsconfig.cjs.json",
+    "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
+    "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",
-    "preversion": "npm run lint",
-    "version": "npm run format && git add -A src",
-    "postversion": "git push && git push --tags",
     "docs": "typedoc",
     "docs:serve": "npm run docs && serve docs"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/cjs/index.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./services/*": {
-      "import": "./dist/services/*.js",
-      "require": "./dist/services/*.cjs",
-      "types": "./dist/services/*.d.ts"
+      "default": "./dist/index.js"
     }
   },
   "files": [
     "dist/**/*"
   ],
   "dependencies": {
-    "@noble/hashes": "^1.3.2",
+    "@noble/hashes": "^1.6.1",
     "@types/jsonwebtoken": "^9.0.7",
     "dotenv": "^16.3.1",
     "jsonwebtoken": "^9.0.2",
-    "nostr-crypto-utils": "0.4.5",
+    "nostr-crypto-utils": "^0.4.10",
     "nostr-nsec-seedphrase": "^0.1.1",
-    "nostr-websocket-utils": "0.3.1",
-    "pino": "^8.16.0",
-    "pino-pretty": "^10.2.0"
+    "nostr-websocket-utils": "^0.3.10",
+    "pino": "^8.16.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
@@ -63,12 +55,12 @@
     "eslint": "^8.54.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-jsdoc": "^46.0.0",
+    "pino-pretty": "^13.0.0",
     "prettier": "^3.1.0",
     "serve": "^14.2.1",
     "typedoc": "^0.27.0",
-    "typedoc-theme-hierarchy": "^4.1.2",
     "typescript": "^5.3.2",
-    "vitest": "^1.0.0"
+    "vitest": "^1.6.0"
   },
   "keywords": [
     "nostr",
