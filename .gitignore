@@ -47,3 +47,6 @@ docs/
 *.pem
 *.key
 *.cert
+
+# Local Development Files
+CHECKLIST.md
