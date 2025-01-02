@@ -1,157 +1,78 @@
-import { describe, expect, it, beforeEach, jest } from '@jest/globals';
-import { NostrService } from '../../services/nostr.service.js';
-import { SimplePool, Event, Relay, Filter, Sub } from 'nostr-tools';
-import * as nostrTools from 'nostr-tools';
+import { describe, expect, it, beforeEach, vi } from 'vitest';
+import { NostrService } from '../../services/nostr.service';
+import { NostrError } from '../../types/errors';
+import { NostrServiceConfig } from '../../types/config';
 
-// Mock nostr-tools
-jest.mock('nostr-tools', () => {
-    const mockSimplePool = jest.fn().mockImplementation(() => ({
-        ensureRelay: jest.fn(),
-        publish: jest.fn(),
-        list: jest.fn(),
-        get: jest.fn(),
-        sub: jest.fn(),
-        close: jest.fn(),
-        seenOn: jest.fn(),
-        batchedList: jest.fn(),
-        _conn: new Map(),
-        _seenOn: new Map(),
-        batchedByKey: new Map(),
-        eoseSubTimeout: 0,
-        seenOnTimeout: 0,
-        getEventTimeout: 0
-    }));
+// Mock external dependencies
+const mockConnect = vi.fn().mockResolvedValue(undefined);
+const mockDisconnect = vi.fn().mockResolvedValue(undefined);
+const mockSendMessage = vi.fn().mockResolvedValue(undefined);
 
-    return {
-        SimplePool: mockSimplePool,
-        generatePrivateKey: jest.fn(),
-        getPublicKey: jest.fn(),
-        getEventHash: jest.fn().mockReturnValue('test-event-hash'),
-        signEvent: jest.fn().mockReturnValue('test-signature'),
-        nip04: {
-            encrypt: jest.fn(),
-            decrypt: jest.fn()
-        }
-    };
-});
+vi.mock('nostr-websocket-utils', () => ({
+  NostrWSClient: vi.fn().mockImplementation(() => ({
+    connect: mockConnect,
+    disconnect: mockDisconnect,
+    sendMessage: mockSendMessage
+  }))
+}));
+
+vi.mock('nostr-crypto-utils', () => ({
+  encryptMessage: vi.fn().mockResolvedValue('encrypted_test message'),
+  generateKeyPair: vi.fn().mockResolvedValue({
+    publicKey: 'pub_test-private-key',
+    privateKey: 'test-private-key'
+  })
+}));
+
+// Mock NIP-01 functions
+vi.mock('../../nips/nip01', () => ({
+  signedEvent: vi.fn().mockResolvedValue({
+    id: 'test-event-id',
+    pubkey: 'test-pubkey',
+    created_at: Math.floor(Date.now() / 1000),
+    kind: 4,
+    tags: [['p', 'test-pubkey']],
+    content: 'encrypted_test message',
+    sig: 'test-signature'
+  })
+}));
 
 describe('NostrService', () => {
-    let nostrService: NostrService;
-    let simplePool: jest.Mocked<SimplePool>;
-    const privateKey = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
-    const relayUrl = 'wss://relay.damus.io';
+  let service: NostrService;
+  let config: NostrServiceConfig;
 
-    beforeEach(() => {
-        // Reset all mocks
-        jest.clearAllMocks();
+  beforeEach(() => {
+    vi.clearAllMocks();
+    
+    config = {
+      relayUrls: ['wss://relay1.example.com'],
+      privateKey: 'test-private-key'
+    };
+    
+    service = new NostrService(config);
+  });
 
-        // Set up mock implementations
-        simplePool = new nostrTools.SimplePool() as jest.Mocked<SimplePool>;
-        const mockRelay = { url: relayUrl } as Relay;
-        const mockEvent: Event = {
-            kind: 4,
-            created_at: Math.floor(Date.now() / 1000),
-            tags: [],
-            content: 'test-content',
-            pubkey: 'test-pubkey',
-            id: 'test-id',
-            sig: 'test-sig'
-        };
-
-        // Set up mock implementations
-        simplePool.ensureRelay.mockImplementation(async () => mockRelay);
-        simplePool.publish.mockImplementation(() => [Promise.resolve()]);
-        simplePool.list.mockImplementation(async <K extends number = number>() => Promise.resolve([mockEvent] as Event<K>[]));
-        simplePool.sub.mockImplementation(<K extends number = number>() => ({} as Sub<K>));
-
-        // Mock nostr-tools functions with proper types
-        jest.spyOn(nostrTools, 'generatePrivateKey').mockReturnValue(privateKey);
-        jest.spyOn(nostrTools, 'getPublicKey').mockReturnValue('test-pubkey');
-        jest.spyOn(nostrTools.nip04, 'encrypt').mockResolvedValue('encrypted-message');
-        jest.spyOn(nostrTools.nip04, 'decrypt').mockResolvedValue('decrypted-message');
-
-        // Initialize NostrService with mocked SimplePool
-        nostrService = new NostrService(relayUrl, privateKey);
+  describe('core functionality', () => {
+    it('should send direct message successfully when connected', async () => {
+      await service.connect();
+      const event = await service.sendDirectMessage('test-pubkey', 'test message');
+      
+      expect(event).toBeDefined();
+      expect(event.kind).toBe(4); // Direct message kind
+      expect(mockSendMessage).toHaveBeenCalled();
     });
 
-    it('should initialize with valid keys', () => {
-        expect(nostrService).toBeDefined();
-        expect(nostrTools.getPublicKey).toHaveBeenCalledWith(privateKey);
+    it('should throw error if private key is empty', async () => {
+      service = new NostrService({ ...config, privateKey: '' });
+      await expect(
+        service.sendDirectMessage('test-pubkey', 'test message')
+      ).rejects.toThrow(NostrError);
+      expect(mockSendMessage).not.toHaveBeenCalled();
     });
 
-    it('should connect to relay', async () => {
-        await nostrService.connect();
-        expect(simplePool.ensureRelay).toHaveBeenCalledWith(relayUrl);
+    it('should throw error if no relay URLs configured', async () => {
+      service = new NostrService({ ...config, relayUrls: [] });
+      await expect(service.connect()).rejects.toThrow(NostrError);
     });
-
-    it('should send DM successfully', async () => {
-        const recipientPubkey = 'recipient-pubkey';
-        const message = 'Test message';
-
-        await nostrService.sendDM(recipientPubkey, message);
-
-        expect(nostrTools.nip04.encrypt).toHaveBeenCalledWith(
-            privateKey,
-            recipientPubkey,
-            message
-        );
-        expect(simplePool.publish).toHaveBeenCalled();
-    });
-
-    it('should receive DM successfully', async () => {
-        const senderPubkey = 'sender-pubkey';
-        const mockEvent: Event = {
-            kind: 4,
-            created_at: Math.floor(Date.now() / 1000),
-            tags: [],
-            content: 'encrypted-message',
-            pubkey: senderPubkey,
-            id: 'test-id',
-            sig: 'test-sig'
-        };
-
-        simplePool.list.mockImplementation(async <K extends number = number>() => Promise.resolve([mockEvent] as Event<K>[]));
-
-        const message = await nostrService.receiveDM(senderPubkey);
-        
-        expect(message).toBe('decrypted-message');
-        expect(nostrTools.nip04.decrypt).toHaveBeenCalledWith(
-            privateKey,
-            senderPubkey,
-            'encrypted-message'
-        );
-    });
-
-    describe('sendMessage', () => {
-        it('should handle encryption errors', async () => {
-            const recipientPubkey = 'recipient-pubkey';
-            const message = 'Test message';
-
-            jest.spyOn(nostrTools.nip04, 'encrypt').mockRejectedValueOnce(new Error('Encryption failed'));
-
-            await expect(nostrService.sendDM(recipientPubkey, message))
-                .rejects.toThrow('Encryption failed');
-        });
-    });
-
-    describe('receiveMessages', () => {
-        it('should handle decryption errors', async () => {
-            const senderPubkey = 'sender-pubkey';
-            const mockEvent: Event = {
-                kind: 4,
-                created_at: Math.floor(Date.now() / 1000),
-                tags: [],
-                content: 'encrypted-message',
-                pubkey: senderPubkey,
-                id: 'test-id',
-                sig: 'test-sig'
-            };
-
-            simplePool.list.mockImplementation(async <K extends number = number>() => Promise.resolve([mockEvent] as Event<K>[]));
-            jest.spyOn(nostrTools.nip04, 'decrypt').mockRejectedValueOnce(new Error('Decryption failed'));
-
-            const result = await nostrService.receiveDM(senderPubkey);
-            expect(result).toBeNull();
-        });
-    });
+  });
 });

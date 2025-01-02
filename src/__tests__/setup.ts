@@ -1,6 +1,5 @@
 import { config } from 'dotenv';
-import { generatePrivateKey } from 'nostr-tools';
-import { EventEmitter } from 'events';
+import { beforeAll, afterAll, vi } from 'vitest';
 
 // Load environment variables
 config();
@@ -11,42 +10,49 @@ process.env.PORT = '3003';
 process.env.JWT_SECRET = 'test-jwt-secret';
 process.env.MAGIC_LINK_BASE_URL = 'http://localhost:3003/auth/magiclink/verify';
 
-// Generate test keys if not present
-if (!process.env.NOSTR_PRIVATE_KEY) {
-    process.env.NOSTR_PRIVATE_KEY = generatePrivateKey();
-}
+// Mock console methods
+global.console.log = vi.fn();
+global.console.error = vi.fn();
+global.console.warn = vi.fn();
+global.console.info = vi.fn();
 
-// Mock WebSocket for Nostr relay connections
-class MockWebSocket extends EventEmitter {
-    static CONNECTING = 0;
-    static OPEN = 1;
-    static CLOSING = 2;
-    static CLOSED = 3;
+// Mock timers
+vi.useFakeTimers();
 
-    readyState = MockWebSocket.CONNECTING;
-    url: string;
+// Mock crypto-utils functions
+vi.mock('nostr-crypto-utils', () => ({
+  createKeyPair: vi.fn().mockReturnValue({
+    privateKey: 'test-private-key',
+    publicKey: 'test-public-key'
+  }),
+  validateKeyPair: vi.fn().mockReturnValue(true),
+  encrypt: vi.fn().mockResolvedValue('encrypted-content'),
+  decrypt: vi.fn().mockResolvedValue('decrypted-message'),
+  getEventHash: vi.fn().mockReturnValue('test-hash'),
+  signEvent: vi.fn().mockReturnValue('test-signature')
+}));
 
-    constructor(url: string) {
-        super();
-        this.url = url;
-        setTimeout(() => {
-            this.readyState = MockWebSocket.OPEN;
-            this.emit('open');
-        }, 0);
-    }
+// Mock pino logger
+vi.mock('pino', () => ({
+  default: vi.fn().mockReturnValue({
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
+    child: vi.fn().mockReturnValue({
+      info: vi.fn(),
+      error: vi.fn(),
+      warn: vi.fn(),
+      debug: vi.fn()
+    })
+  })
+}));
 
-    send(data: string) {
-        // Mock relay response
-        setTimeout(() => {
-            this.emit('message', { data: JSON.stringify({ success: true }) });
-        }, 0);
-    }
+beforeAll(() => {
+  // Any global setup
+});
 
-    close() {
-        this.readyState = MockWebSocket.CLOSED;
-        this.emit('close');
-    }
-}
-
-// Replace global WebSocket with mock
-(global as any).WebSocket = MockWebSocket;
+afterAll(() => {
+  // Any global cleanup
+  vi.clearAllMocks();
+});

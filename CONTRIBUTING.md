@@ -1,87 +1,128 @@
-# Contributing to Nostr DM Magic Link Middleware
+# Contributing to nostr-dm-magiclink-utils
 
-First off, thank you for considering contributing to our Nostr ecosystem! This is an open-source project, and we love to receive contributions from our community.
+First off, thank you for considering contributing to nostr-dm-magiclink-utils! It's people like you that make this package a great tool for the Nostr community.
 
 ## Code of Conduct
 
-This project and everyone participating in it is governed by our Code of Conduct. By participating, you are expected to uphold this code.
-
-## How Can I Contribute?
-
-### Reporting Bugs
-
-Before creating bug reports, please check the issue list as you might find out that you don't need to create one. When you are creating a bug report, please include as many details as possible:
-
-* Use a clear and descriptive title
-* Describe the exact steps which reproduce the problem
-* Provide specific examples to demonstrate the steps
-* Describe the behavior you observed after following the steps
-* Explain which behavior you expected to see instead and why
-* Include any error messages or logs
-
-### Suggesting Enhancements
-
-If you have a suggestion for a new feature or enhancement:
-
-* Use a clear and descriptive title
-* Provide a step-by-step description of the suggested enhancement
-* Provide specific examples to demonstrate the steps
-* Describe the current behavior and explain which behavior you expected to see instead
-* Explain why this enhancement would be useful
-
-### Pull Requests
-
-* Fill in the required template
-* Do not include issue numbers in the PR title
-* Include screenshots and animated GIFs in your pull request whenever possible
-* Follow the TypeScript styleguide
-* Include thoughtfully-worded, well-structured tests
-* Document new code
-* End all files with a newline
+This project and everyone participating in it is governed by our [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
 
 ## Development Process
 
-1. Fork the repo and create your branch from `main`
-2. Run `npm install` to install dependencies
-3. Make your changes
-4. Add tests for any new functionality
-5. Run `npm test` to ensure nothing is broken
-6. Update documentation if needed
-7. Submit your pull request
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes following our commit message convention
+4. Push to your branch
+5. Open a Pull Request
 
-### Testing
+### Commit Message Convention
 
-We use Jest for testing. Please ensure all tests pass before submitting a PR:
+We follow semantic commit messages:
+- `feat:` - New features
+- `fix:` - Bug fixes
+- `docs:` - Documentation changes
+- `style:` - Code style changes (formatting, etc)
+- `refactor:` - Code changes that neither fix bugs nor add features
+- `perf:` - Performance improvements
+- `test:` - Test-related changes
+- `chore:` - Changes to build process or auxiliary tools
 
+Example: `feat: add support for custom relay prioritization`
+
+### Development Setup
+
+1. Clone your fork
+2. Install dependencies:
+```bash
+npm install
+```
+3. Run tests:
 ```bash
 npm test
 ```
 
-For more information about testing, see our [Testing Guide](docs/testing-nostr-services.md).
+### Type Safety
 
-### TypeScript
+- All code must be written in TypeScript
+- Maintain 100% type safety
+- No use of `any` without explicit justification
+- Document complex types
 
-This project is written in TypeScript. Please ensure your code:
+### Testing Requirements
 
-* Has proper type definitions
-* Doesn't use `any` unless absolutely necessary
-* Follows our existing patterns for generics and type safety
+1. Unit tests for all new functionality
+2. Integration tests for relay interactions
+3. Test coverage must not decrease
+4. Tests must pass in CI before merge
 
-### Commit Messages
+### Code Style
 
-* Use the present tense ("Add feature" not "Added feature")
-* Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
-* Limit the first line to 72 characters or less
-* Reference issues and pull requests liberally after the first line
+We use ESLint and Prettier. Before submitting:
+```bash
+npm run lint
+npm run format
+```
 
-## Related Projects
+### Documentation
 
-This middleware is part of a larger Nostr ecosystem. Consider contributing to our related projects:
+For any changes, update:
+1. TSDoc comments for public APIs
+2. README.md if adding features
+3. Example code if relevant
+4. CHANGELOG.md following semver
 
-* [nostr-auth-middleware](https://github.com/HumanjavaEnterprises/nostr-auth-middleware)
-* [nostr-relay-nestjs](https://github.com/HumanjavaEnterprises/nostr-relay-nestjs)
-* [ipfs-nostr-file-store](https://github.com/HumanjavaEnterprises/ipfs-nostr-file-store)
+### Security
 
-## License
+- Review [SECURITY.md](SECURITY.md) before contributing
+- Never commit sensitive keys or credentials
+- Report security issues privately
+- Always sanitize user input
+- Follow secure coding practices
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+### Internationalization
+
+When adding or modifying messages:
+1. Update all language templates
+2. Maintain RTL support
+3. Follow i18n best practices
+4. Test with various locales
+
+## Pull Request Process
+
+1. Update documentation
+2. Add tests for new features
+3. Ensure CI passes
+4. Get review from maintainers
+5. Squash commits before merge
+
+### PR Title Format
+
+Follow the commit message convention, but with more detail:
+```
+feat(relay): add support for custom relay prioritization
+
+- Add RelayPriority interface
+- Implement priority queue for relay connections
+- Update documentation with examples
+```
+
+## Release Process
+
+1. Update CHANGELOG.md
+2. Update version in package.json
+3. Create GitHub release
+4. Publish to npm
+
+## Getting Help
+
+- Open an issue for bugs
+- Discussions for questions
+- Security issues: see [SECURITY.md](SECURITY.md)
+
+## Recognition
+
+Contributors will be:
+- Added to CONTRIBUTORS.md
+- Mentioned in release notes
+- Credited in documentation
+
+Thank you for contributing!

@@ -1,124 +1,228 @@
-import { SimplePool, getPublicKey, getEventHash, signEvent, Event } from 'nostr-tools';
-import { nip04, nip19 } from 'nostr-tools';
-import { createLogger } from '../utils/logger.js';
-import { hexToBytes } from '@noble/hashes/utils';
-import { schnorr } from '@noble/curves/secp256k1';
+import { encryptMessage } from 'nostr-crypto-utils';
+import { NostrWSClient } from 'nostr-websocket-utils';
+import { NostrServiceInterface } from '../types/service';
+import { NostrError, NostrErrorCode } from '../types/errors';
+import { NostrServiceConfig } from '../types/config';
+import { SignEventParams, NostrEvent } from '../types/nostr';
+import { signedEvent } from '../nips/nip01';
+import { Logger } from 'pino';
+import { createLogger } from '../utils/logger';
 
-const logger = createLogger('NostrService');
+/**
+ * Implementation of the Nostr service for handling direct messages
+ */
+export class NostrService implements NostrServiceInterface {
+  private readonly logger: Logger;
+  private readonly wsClients: Map<string, NostrWSClient>;
+  private isConnected: boolean = false;
+  private lastError?: Error;
 
-export class NostrService {
-    private pool: SimplePool;
-    private privateKey: string;
-    private pubkey: string;
-    private relayUrl: string;
+  /**
+   * Creates a new instance of NostrService
+   * @param config - Service configuration
+   * @param logger - Optional logger instance. If not provided, creates a new logger
+   */
+  constructor(
+    private readonly config: NostrServiceConfig,
+    logger?: Logger
+  ) {
+    this.logger = logger || createLogger('NostrService');
+    this.wsClients = new Map();
+  }
 
-    constructor(relayUrl: string, privateKey: string) {
-        if (!privateKey) {
-            throw new Error('Private key is required');
-        }
+  /**
+   * Connect to all configured relays
+   */
+  public async connect(): Promise<void> {
+    try {
+      if (!this.config.relayUrls?.length) {
+        throw new NostrError(
+          'No relay URLs configured',
+          NostrErrorCode.CONFIGURATION_ERROR
+        );
+      }
 
-        // Clean and validate private key
-        const cleanKey = privateKey.replace('0x', '').trim();
-        if (!/^[0-9a-f]{64}$/.test(cleanKey)) {
-            throw new Error('Private key must be a 64-character hex string');
-        }
+      await Promise.all(
+        this.config.relayUrls.map(url => this.connectToRelay(url))
+      );
+      this.isConnected = true;
+      this.lastError = undefined;
+    } catch (error) {
+      this.isConnected = false;
+      this.lastError = error instanceof Error ? error : new Error('Unknown error occurred');
+      throw error;
+    }
+  }
 
-        try {
-            // Keep the hex string for nostr-tools
-            this.privateKey = cleanKey;
-            this.pubkey = getPublicKey(cleanKey);
-            this.relayUrl = relayUrl;
-            this.pool = new SimplePool();
-            logger.info('Nostr service initialized with pubkey:', this.pubkey);
-        } catch (error) {
-            logger.error('Failed to initialize Nostr service:', error);
-            throw new Error('Invalid private key format');
-        }
+  /**
+   * Disconnect from all relays
+   */
+  public async disconnect(): Promise<void> {
+    try {
+      await Promise.all(
+        Array.from(this.wsClients.values()).map(async client => {
+          if (isNostrWSClient(client)) {
+            return client.disconnect();
+          }
+          throw new Error('Invalid client type');
+        })
+      );
+      this.wsClients.clear();
+      this.isConnected = false;
+      this.lastError = undefined;
+    } catch (error) {
+      this.lastError = error instanceof Error ? error : new Error('Unknown error occurred');
+      throw error;
+    }
+  }
+
+  /**
+   * Get the current connection status of the service
+   * @returns {object} The current status object containing connection state and any error
+   */
+  public getStatus(): { connected: boolean; error?: string } {
+    return {
+      connected: this.isConnected,
+      error: this.lastError?.message
+    };
+  }
+
+  /**
+   * Add a new relay
+   * @param url - URL of the relay to add
+   */
+  public async addRelay(url: string): Promise<void> {
+    if (this.wsClients.has(url)) {
+      return;
     }
 
-    async connect(): Promise<void> {
-        try {
-            await this.pool.ensureRelay(this.relayUrl);
-            logger.info('Connected to Nostr relay');
-        } catch (error) {
-            logger.error('Failed to connect to Nostr relay:', error);
-            throw error;
-        }
+    try {
+      await this.connectToRelay(url);
+      if (!this.config.relayUrls.includes(url)) {
+        this.config.relayUrls.push(url);
+      }
+    } catch (error) {
+      throw new NostrError(
+        `Failed to add relay ${url}`,
+        NostrErrorCode.RELAY_ERROR
+      );
+    }
+  }
+
+  /**
+   * Remove a relay
+   * @param url - URL of the relay to remove
+   */
+  public async removeRelay(url: string): Promise<void> {
+    const client = this.wsClients.get(url);
+    if (!client) {
+      return;
     }
 
-    async sendDM(recipientPubkey: string, message: string): Promise<void> {
-        try {
-            const encryptedContent = await nip04.encrypt(
-                this.privateKey,
-                recipientPubkey,
-                message
+    try {
+      await client.disconnect();
+      this.wsClients.delete(url);
+      this.config.relayUrls = this.config.relayUrls.filter(u => u !== url);
+    } catch (error) {
+      throw new NostrError(
+        `Failed to remove relay ${url}`,
+        NostrErrorCode.RELAY_ERROR
+      );
+    }
+  }
+
+  /**
+   * Connects to a Nostr relay
+   * @param url - URL of the relay to connect to
+   */
+  private async connectToRelay(url: string): Promise<void> {
+    try {
+      const client = new NostrWSClient([url]);
+      await client.connect();
+      this.wsClients.set(url, client);
+    } catch (error) {
+      throw new NostrError(
+        `Failed to connect to relay ${url}`,
+        NostrErrorCode.RELAY_CONNECTION_FAILED
+      );
+    }
+  }
+
+  /**
+   * Sends a direct message to a recipient
+   * @param pubkey - Public key of the recipient
+   * @param content - Content of the message
+   * @returns The sent event
+   */
+  public async sendDirectMessage(pubkey: string, content: string): Promise<NostrEvent> {
+    try {
+      // Validate configuration
+      if (!this.config.privateKey || this.config.privateKey.trim() === '') {
+        throw new NostrError(
+          'Private key is required',
+          NostrErrorCode.CONFIGURATION_ERROR
+        );
+      }
+
+      if (!this.config.relayUrls || this.config.relayUrls.length === 0) {
+        throw new NostrError(
+          'At least one relay URL is required',
+          NostrErrorCode.CONFIGURATION_ERROR
+        );
+      }
+
+      // Connect to relays if not already connected
+      if (!this.isConnected) {
+        await this.connect();
+      }
+
+      // Encrypt the message
+      const encryptedContent = await encryptMessage(
+        content,
+        this.config.privateKey,
+        pubkey
+      );
+
+      // Create and sign the Nostr event
+      const eventParams: SignEventParams = {
+        privateKey: this.config.privateKey,
+        content: encryptedContent,
+        kind: 4, // Direct Message
+        tags: [['p', pubkey]]
+      };
+      const event = await signedEvent(eventParams);
+
+      // Send the event to all connected relays
+      const sendPromises = Array.from(this.wsClients.entries())
+        .map(async ([url, client]) => {
+          try {
+            await client.sendMessage(['EVENT', event]);
+          } catch (error) {
+            this.logger.error(
+              { relayUrl: url, error },
+              'Failed to send event to relay'
             );
-
-            const event: Event = {
-                kind: 4,
-                pubkey: this.pubkey,
-                created_at: Math.floor(Date.now() / 1000),
-                tags: [['p', recipientPubkey]],
-                content: encryptedContent,
-                id: '',  // Will be set by getEventHash
-                sig: ''  // Will be set by signEvent
-            };
-
-            // Sign the event
-            event.id = getEventHash(event);
-            event.sig = signEvent(event, this.privateKey);
-
-            await this.pool.publish([this.relayUrl], event);
-            logger.info('DM sent successfully');
-        } catch (error) {
-            logger.error('Failed to send DM:', error);
-            throw error;
-        }
-    }
-
-    async receiveDM(senderPubkey: string): Promise<string | null> {
-        try {
-            const events = await this.pool.list([this.relayUrl], [{
-                kinds: [4],
-                authors: [senderPubkey],
-                '#p': [this.pubkey],
-                limit: 1,
-            }]);
-
-            if (!events || events.length === 0) {
-                return null;
-            }
-
-            const event = events[0];
-            const decryptedContent = await nip04.decrypt(
-                this.privateKey,
-                event.pubkey,
-                event.content
+            throw new NostrError(
+              `Failed to send event to relay ${url}`,
+              NostrErrorCode.RELAY_ERROR
             );
+          }
+        });
 
-            return decryptedContent;
-        } catch (error) {
-            logger.error('Failed to receive DM:', error);
-            return null;
-        }
+      await Promise.all(sendPromises);
+      return event;
+    } catch (error) {
+      if (error instanceof NostrError) {
+        throw error;
+      }
+      throw new NostrError(
+        'Failed to send direct message',
+        NostrErrorCode.MESSAGE_SEND_FAILED
+      );
     }
+  }
+}
 
-    async formatPubkey(pubkey: string): Promise<string> {
-        return nip19.npubEncode(pubkey);
-    }
-
-    async verifyDM(senderPubkey: string, expectedContent: string): Promise<boolean> {
-        try {
-            const receivedContent = await this.receiveDM(senderPubkey);
-            return receivedContent === expectedContent;
-        } catch (error) {
-            logger.error('Failed to verify DM:', error);
-            return false;
-        }
-    }
-
-    disconnect(): void {
-        this.pool.close([this.relayUrl]);
-        logger.info('Disconnected from Nostr relay');
-    }
+function isNostrWSClient(client: NostrWSClient | unknown): client is NostrWSClient {
+  return client instanceof NostrWSClient;
 }

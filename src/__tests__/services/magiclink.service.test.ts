@@ -1,74 +1,41 @@
-import { describe, expect, it, beforeEach } from '@jest/globals';
-import { MagicLinkService } from '../../services/magiclink.service.js';
-import jwt from 'jsonwebtoken';
+import { describe, expect, it, vi } from 'vitest';
+import { MagicLinkService } from '../../services/magiclink.service';
+import { NostrService } from '../../services/nostr.service';
+import { MagicLinkConfig } from '../../types';
+
+// Mock external dependencies
+vi.mock('nostr-crypto-utils', () => ({
+  generateKeyPair: vi.fn().mockResolvedValue({
+    publicKey: 'test-public-key',
+    privateKey: 'test-private-key'
+  })
+}));
 
 describe('MagicLinkService', () => {
-    let magicLinkService: MagicLinkService;
-    const testJwtSecret = 'test-secret';
-    const testBaseUrl = 'https://example.com';
-    const validNpub = 'npub1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+  it('should send magic link successfully', async () => {
+    const mockNostrService = {
+      sendDirectMessage: vi.fn().mockResolvedValue({ id: 'test-event-id' })
+    } as unknown as NostrService;
 
-    beforeEach(() => {
-        magicLinkService = new MagicLinkService(testJwtSecret, testBaseUrl);
+    const config: MagicLinkConfig = {
+      verifyUrl: 'https://example.com/verify',
+      token: 'test-token'
+    };
+
+    const service = new MagicLinkService(mockNostrService, config);
+
+    const result = await service.sendMagicLink({
+      recipientPubkey: 'test-public-key',
+      messageOptions: {
+        locale: 'en'
+      }
     });
 
-    describe('createMagicLink', () => {
-        it('should create a valid magic link token', async () => {
-            const token = await magicLinkService.createMagicLink(validNpub);
-            expect(token).toBeDefined();
-            expect(typeof token).toBe('string');
-
-            const decoded = jwt.verify(token, testJwtSecret) as { npub: string };
-            expect(decoded.npub).toBe(validNpub);
-        });
-
-        it('should throw error with invalid pubkey', async () => {
-            await expect(magicLinkService.createMagicLink('')).rejects.toThrow('Invalid pubkey');
-        });
-
-        it('should create token with custom expiry', async () => {
-            const token = await magicLinkService.createMagicLink(validNpub, 300);
-
-            const decoded = jwt.verify(token, testJwtSecret) as { exp: number; iat: number };
-            expect(decoded.exp - decoded.iat).toBe(300); // 5 minutes in seconds
-        });
-    });
-
-    describe('verifyMagicLink', () => {
-        it('should verify a valid token', async () => {
-            const token = await magicLinkService.createMagicLink(validNpub);
-            const result = await magicLinkService.verifyMagicLink(token);
-            expect(result).toBe(validNpub);
-        });
-
-        it('should return null for an invalid token', async () => {
-            const result = await magicLinkService.verifyMagicLink('invalid-token');
-            expect(result).toBeNull();
-        });
-
-        it('should return null for an expired token', async () => {
-            const expiredToken = jwt.sign(
-                { npub: validNpub },
-                testJwtSecret,
-                { expiresIn: -1 } // Already expired
-            );
-            const result = await magicLinkService.verifyMagicLink(expiredToken);
-            expect(result).toBeNull();
-        });
-
-        it('should handle malformed tokens', async () => {
-            const result = await magicLinkService.verifyMagicLink('malformed.token.here');
-            expect(result).toBeNull();
-        });
-
-        it('should handle tokens signed with different secret', async () => {
-            const token = jwt.sign(
-                { npub: validNpub },
-                'different-secret',
-                { expiresIn: '5m' }
-            );
-            const result = await magicLinkService.verifyMagicLink(token);
-            expect(result).toBeNull();
-        });
-    });
+    expect(result.success).toBe(true);
+    expect(result.magicLink).toContain('https://example.com/verify');
+    expect(mockNostrService.sendDirectMessage).toHaveBeenCalledWith(
+      'test-public-key',
+      expect.stringContaining('https://example.com/verify')
+    );
+  });
 });

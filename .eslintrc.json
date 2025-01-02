@@ -1,0 +1,42 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "ignorePatterns": ["dist/**/*", "examples/**/*", "vitest.config.ts"],
+  "parserOptions": {
+    "ecmaVersion": 2021,
+    "sourceType": "module",
+    "project": ["./tsconfig.json", "./tsconfig.test.json"]
+  },
+  "plugins": ["@typescript-eslint", "jsdoc"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:jsdoc/recommended",
+    "prettier"
+  ],
+  "rules": {
+    "jsdoc/require-jsdoc": [
+      "warn",
+      {
+        "publicOnly": true,
+        "require": {
+          "FunctionDeclaration": true,
+          "MethodDefinition": true,
+          "ClassDeclaration": true,
+          "ArrowFunctionExpression": false,
+          "FunctionExpression": false
+        }
+      }
+    ],
+    "jsdoc/require-description": ["warn", {
+      "contexts": ["FunctionDeclaration", "ClassDeclaration", "MethodDefinition"]
+    }],
+    "jsdoc/require-param-type": "off",
+    "jsdoc/require-returns-type": "off"
+  },
+  "settings": {
+    "jsdoc": {
+      "mode": "typescript"
+    }
+  }
+}

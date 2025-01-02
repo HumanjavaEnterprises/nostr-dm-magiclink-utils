@@ -1,0 +1,16 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["./src/index.ts"],
+  "out": "docs",
+  "name": "Nostr DM Magic Link Utils",
+  "includeVersion": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "categorizeByGroup": true,
+  "searchInComments": true,
+  "readme": "./README.md",
+  "navigationLinks": {
+    "GitHub": "https://github.com/HumanjavaEnterprises/nostr-dm-magiclink-utils"
+  }
+}
