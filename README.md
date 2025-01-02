@@ -14,17 +14,17 @@
 [![Languages](https://img.shields.io/badge/i18n-9_languages-green.svg)](https://github.com/HumanjavaEnterprises/nostr-dm-magiclink-utils#supported-languages)
 [![Security](https://img.shields.io/badge/security-NIP--04-brightgreen.svg)](https://github.com/nostr-protocol/nips/blob/master/04.md)
 
-A lightweight, focused utility for sending magic links via Nostr DMs. Perfect for implementing passwordless authentication in Nostr-based applications.
+A comprehensive Nostr utility library for implementing secure, user-friendly authentication via magic links in direct messages. Built with TypeScript and following Nostr Improvement Proposals (NIPs) for maximum compatibility and security.
 
 ## Features
 
-- 🔐 **Secure Authentication**: Send magic links via encrypted Nostr DMs
-- 🌍 **Full i18n Support**: 9 languages including RTL support (Arabic, Chinese, English, French, Japanese, Korean, Portuguese, Russian, Spanish)
-- 🔄 **Reliable Delivery**: Multiple relay support with automatic failover
-- 🛡️ **Type Safety**: Written in TypeScript with comprehensive types
+- 🔐 **NIP-04 Compliant**: Secure, encrypted direct messages following Nostr standards
+- 🌍 **Rich i18n Support**: 9 languages with RTL support
+- 🔄 **Multi-Relay Support**: Reliable message delivery with automatic failover
+- 🛡️ **Type-Safe**: Full TypeScript support with comprehensive types
 - 📝 **Flexible Templates**: Customizable messages with variable interpolation
-- 🚀 **Easy Integration**: Simple API with minimal configuration
-- 🎯 **Focused Design**: Streamlined for magic link delivery without unnecessary features
+- 🚀 **Modern API**: Promise-based, async/await friendly interface
+- 🎯 **Zero Config**: Sensible defaults with optional deep customization
 
 ## Installation
 
@@ -34,185 +34,255 @@ npm install nostr-dm-magiclink-utils
 
 ## Quick Start
 
+Here's a complete example showing how to set up and use the magic link service:
+
 ```typescript
-import { createNostrMagicLink } from 'nostr-dm-magiclink-utils';
+import { createNostrMagicLink, NostrError } from 'nostr-dm-magiclink-utils';
+import { generatePrivateKey } from 'nostr-tools'; // For demo purposes
 
-// Create the magic link service
-const magicLink = createNostrMagicLink({
-  nostr: {
-    privateKey: "your_service_private_key",
-    relayUrls: ["wss://relay.damus.io", "wss://relay.nostr.band"]
-  },
-  magicLink: {
-    verifyUrl: "https://your-app.com/auth/verify",
-    token: "your_jwt_token", // or async token generator
-    defaultLocale: "en"      // optional, defaults to "en"
-  }
-});
+async function setupAuthService() {
+  // Create service with secure configuration
+  const magicLink = createNostrMagicLink({
+    nostr: {
+      // In production, load from secure environment variable
+      privateKey: process.env.NOSTR_PRIVATE_KEY || generatePrivateKey(),
+      relayUrls: [
+        'wss://relay.damus.io',
+        'wss://relay.nostr.band',
+        'wss://nos.lol'
+      ],
+      // Optional: Configure connection timeouts
+      connectionTimeout: 5000
+    },
+    magicLink: {
+      verifyUrl: 'https://your-app.com/verify',
+      // Async token generation with expiry
+      token: async () => {
+        const token = await generateSecureToken({
+          expiresIn: '15m',
+          length: 32
+        });
+        return token;
+      },
+      defaultLocale: 'en',
+      // Optional: Custom message templates
+      templates: {
+        en: {
+          subject: 'Login to {{appName}}',
+          body: 'Click this secure link to log in: {{link}}\nValid for 15 minutes.'
+        }
+      }
+    }
+  });
 
-// Send a magic link
-const result = await magicLink.sendMagicLink({
-  recipientPubkey: "npub1...",
-  messageOptions: {
-    locale: "ja",           // optional, override default locale
-    template: "Login to {{appName}}: {{link}}", // optional custom template
-    variables: {            // optional custom variables
-      appName: "YourApp"
+  return magicLink;
+}
+
+// Example usage in an Express route handler
+app.post('/auth/magic-link', async (req, res) => {
+  try {
+    const { pubkey } = req.body;
+    
+    if (!pubkey) {
+      return res.status(400).json({ error: 'Missing pubkey' });
+    }
+
+    const magicLink = await setupAuthService();
+    
+    const result = await magicLink.sendMagicLink({
+      recipientPubkey: pubkey,
+      messageOptions: {
+        locale: req.locale, // From i18n middleware
+        variables: {
+          appName: 'YourApp',
+          username: req.body.username
+        }
+      }
+    });
+
+    if (result.success) {
+      res.json({ 
+        message: 'Magic link sent successfully',
+        expiresIn: '15 minutes'
+      });
+    }
+  } catch (error) {
+    if (error instanceof NostrError) {
+      // Handle specific Nostr-related errors
+      res.status(400).json({ 
+        error: error.message,
+        code: error.code 
+      });
+    } else {
+      // Handle unexpected errors
+      res.status(500).json({ 
+        error: 'Failed to send magic link' 
+      });
     }
   }
 });
-
-if (result.success) {
-  console.log("Magic link sent:", result.magicLink);
-} else {
-  console.error("Failed to send:", result.error);
-}
 ```
 
 ## Advanced Usage
 
-### Dynamic Token Generation
+### Custom Error Handling
+
+```typescript
+try {
+  const result = await magicLink.sendMagicLink({
+    recipientPubkey: pubkey,
+    messageOptions: { locale: 'en' }
+  });
+  
+  if (!result.success) {
+    switch (result.error.code) {
+      case 'RELAY_CONNECTION_FAILED':
+        // Attempt reconnection or use fallback relay
+        await magicLink.reconnect();
+        break;
+      case 'ENCRYPTION_FAILED':
+        // Log encryption errors for debugging
+        logger.error('Encryption failed:', result.error);
+        break;
+      case 'INVALID_PUBKEY':
+        // Handle invalid recipient public key
+        throw new UserError('Invalid recipient');
+        break;
+    }
+  }
+} catch (error) {
+  // Handle other errors
+}
+```
+
+### Multi-Language Support
+
+```typescript
+// Arabic (RTL) example
+const result = await magicLink.sendMagicLink({
+  recipientPubkey: pubkey,
+  messageOptions: {
+    locale: 'ar',
+    // Optional: Override default template
+    template: {
+      subject: 'تسجيل الدخول إلى {{appName}}',
+      body: 'انقر فوق هذا الرابط الآمن لتسجيل الدخول: {{link}}'
+    },
+    variables: {
+      appName: 'تطبيقك',
+      username: 'المستخدم'
+    }
+  }
+});
+```
+
+### Custom Token Generation
 
 ```typescript
 const magicLink = createNostrMagicLink({
-  nostr: {
-    privateKey: process.env.NOSTR_PRIVATE_KEY,
-    relayUrls: ["wss://relay1.com", "wss://relay2.com"]
-  },
+  // ... other config
   magicLink: {
-    verifyUrl: "https://your-app.com/verify",
-    // Async token generation
-    token: async () => {
+    verifyUrl: 'https://your-app.com/verify',
+    token: async (recipientPubkey: string) => {
+      // Generate a secure, short-lived token
       const token = await generateJWT({
-        expiresIn: '1h',
-        // ... other JWT options
+        sub: recipientPubkey,
+        exp: Math.floor(Date.now() / 1000) + (15 * 60), // 15 minutes
+        jti: crypto.randomUUID(),
+        iss: 'your-app'
       });
+      
+      // Optional: Store token in database for verification
+      await db.tokens.create({
+        token,
+        pubkey: recipientPubkey,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000)
+      });
+      
       return token;
     }
   }
 });
 ```
 
-### Custom Message Templates
-
-```typescript
-const result = await magicLink.sendMagicLink({
-  recipientPubkey: recipientPubkey,
-  messageOptions: {
-    locale: "fr",
-    template: "Bienvenue sur {{appName}}! Connectez-vous depuis {{device}}: {{link}}",
-    variables: {
-      appName: "MonApp",
-      device: "iPhone"
-    }
-  }
-});
-```
-
-### RTL Language Support
-
-```typescript
-const result = await magicLink.sendMagicLink({
-  recipientPubkey: recipientPubkey,
-  messageOptions: {
-    locale: "ar",
-    textDirection: "rtl",  // Optional, automatically set for RTL languages
-    variables: {
-      appName: "تطبيقك"
-    }
-  }
-});
-```
-
-### Multiple Relay Management
+### Relay Management
 
 ```typescript
 const magicLink = createNostrMagicLink({
   nostr: {
-    privateKey: "your_private_key",
-    relayUrls: ["wss://relay1.com", "wss://relay2.com"]
-  },
-  magicLink: {
-    verifyUrl: "https://your-app.com/verify",
-    token: "your_token"
+    privateKey: process.env.NOSTR_PRIVATE_KEY,
+    relayUrls: ['wss://relay1.com', 'wss://relay2.com'],
+    // Advanced relay options
+    relayOptions: {
+      retryAttempts: 3,
+      retryDelay: 1000,
+      timeout: 5000,
+      onError: async (error, relay) => {
+        logger.error(`Relay ${relay} error:`, error);
+        // Optionally switch to backup relay
+        await magicLink.addRelay('wss://backup-relay.com');
+      }
+    }
   }
 });
 
-// Add a new relay at runtime
-await magicLink.nostrService.addRelay("wss://relay3.com");
+// Monitor relay status
+magicLink.on('relay:connected', (relay) => {
+  logger.info(`Connected to relay: ${relay}`);
+});
 
-// Remove a relay
-await magicLink.nostrService.removeRelay("wss://relay1.com");
-
-// Check relay status
-const status = magicLink.nostrService.getStatus();
-console.log("Connected relays:", status.connected);
+magicLink.on('relay:disconnected', (relay) => {
+  logger.warn(`Disconnected from relay: ${relay}`);
+});
 ```
 
-### Error Handling
+## Security Best Practices
 
-The package provides detailed error information with specific error codes:
+1. **Private Key Management**
+   - Never hardcode private keys
+   - Use secure environment variables
+   - Rotate keys periodically
 
 ```typescript
-try {
-  const result = await magicLink.sendMagicLink({
-    recipientPubkey: "npub1..."
-  });
-  
-  if (!result.success) {
-    console.error("Failed to send magic link:", result.error);
-  }
-} catch (error) {
-  if (error instanceof NostrError) {
-    switch (error.code) {
-      case NostrErrorCode.ENCRYPTION_FAILED:
-        console.error("Message encryption failed");
-        break;
-      case NostrErrorCode.DECRYPTION_FAILED:
-        console.error("Message decryption failed");
-        break;
-      case NostrErrorCode.RELAY_CONNECTION_FAILED:
-        console.error("Failed to connect to relays");
-        break;
-      // ... handle other error types
-    }
-  }
+// Load private key securely
+const privateKey = await loadPrivateKeyFromSecureStore();
+if (!privateKey) {
+  throw new Error('Missing required private key');
 }
 ```
 
+2. **Token Security**
+   - Use short expiration times (15-30 minutes)
+   - Include necessary claims (sub, exp, jti)
+   - Store tokens securely for verification
+
+3. **Error Handling**
+   - Never expose internal errors to users
+   - Log errors securely
+   - Implement rate limiting
+
+4. **Relay Security**
+   - Use trusted relays
+   - Implement connection timeouts
+   - Handle connection errors gracefully
+
 ## Supported Languages
 
-The package includes built-in templates for:
+The library includes built-in support for:
 - 🇺🇸 English (en)
-- 🇸🇦 Arabic (ar) - RTL Support
 - 🇪🇸 Spanish (es)
 - 🇫🇷 French (fr)
 - 🇯🇵 Japanese (ja)
 - 🇰🇷 Korean (ko)
-- 🇵🇹 Portuguese (pt)
-- 🇷🇺 Russian (ru)
 - 🇨🇳 Chinese (zh)
-
-## Security Considerations
-
-This package handles:
-- ✅ Message encryption (NIP-04)
-- ✅ Public key validation
-- ✅ Input sanitization
-- ✅ Message validation
-
-Your application is responsible for:
-- Token generation and validation
-- Rate limiting
-- Link expiration
-- Access control
-- Session management
-- Token storage and cleanup
+- 🇧🇷 Portuguese (pt)
+- 🇷🇺 Russian (ru)
+- 🇸🇦 Arabic (ar) - with RTL support
 
 ## Contributing
 
-Contributions are welcome! Please read our contributing guidelines before submitting pull requests.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
 
 ## License
 
-MIT License - see LICENSE file for details
+MIT © [vveerrgg](https://github.com/vveerrgg)
