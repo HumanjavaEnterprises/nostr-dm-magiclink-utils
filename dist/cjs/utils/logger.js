@@ -4,48 +4,32 @@
  */
 import pino from 'pino';
 /**
- * Redacts sensitive data from objects before logging
- * @param obj - Object to redact
- * @param sensitiveKeys - Array of sensitive keys to redact
- * @returns Redacted object
- */
-function redactSensitiveData(obj, sensitiveKeys = ['privateKey', 'secret', 'password', 'token']) {
-    if (typeof obj !== 'object' || obj === null) {
-        return obj;
-    }
-    const redacted = { ...obj };
-    for (const key in redacted) {
-        if (sensitiveKeys.includes(key)) {
-            redacted[key] = '[REDACTED]';
-        }
-        else if (typeof redacted[key] === 'object') {
-            redacted[key] = redactSensitiveData(redacted[key], sensitiveKeys);
-        }
-    }
-    return redacted;
-}
-/**
- * Creates a logger instance with the given name
+ * Creates a logger instance with the specified name
  * @param name - Name for the logger instance
  * @returns Pino logger instance
  */
 export function createLogger(name) {
-    return pino.default({
+    const logger = pino.default({
         name,
         level: process.env.LOG_LEVEL || 'info',
         redact: {
-            paths: ['privateKey', 'secret', 'password', 'token'],
+            paths: ['nsec', 'privkey', 'sk', 'secret', 'password', 'apiKey'],
             censor: '[REDACTED]'
         },
-        timestamp: pino.stdTimeFunctions.isoTime,
+        timestamp: () => `,"time":"${new Date(Date.now()).toISOString()}"`,
         formatters: {
             level: (label) => {
                 return { level: label };
             },
-            // Use redactSensitiveData for log objects
-            log: (obj) => redactSensitiveData(obj)
-        }
+        },
+        transport: {
+            target: 'pino-pretty',
+            options: {
+                colorize: true,
+            },
+        },
     });
+    return logger;
 }
 /**
  * Default logger instance for the library

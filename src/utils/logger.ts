@@ -4,36 +4,15 @@
  */
 
 import pino from 'pino';
+import { Logger } from 'pino';
 
 /**
- * Redacts sensitive data from objects before logging
- * @param obj - Object to redact
- * @param sensitiveKeys - Array of sensitive keys to redact
- * @returns Redacted object
- */
-function redactSensitiveData(obj: any, sensitiveKeys: string[] = ['privateKey', 'secret', 'password', 'token']): any {
-  if (typeof obj !== 'object' || obj === null) {
-    return obj;
-  }
-
-  const redacted = { ...obj };
-  for (const key in redacted) {
-    if (sensitiveKeys.includes(key)) {
-      redacted[key] = '[REDACTED]';
-    } else if (typeof redacted[key] === 'object') {
-      redacted[key] = redactSensitiveData(redacted[key], sensitiveKeys);
-    }
-  }
-  return redacted;
-}
-
-/**
- * Creates a logger instance with the given name
+ * Creates a logger instance with the specified name
  * @param name - Name for the logger instance
  * @returns Pino logger instance
  */
-export function createLogger(name: string) {
-  return pino({
+export function createLogger(name: string): Logger {
+  const logger = pino.default({
     name,
     level: process.env.LOG_LEVEL || 'info',
     redact: {
@@ -42,7 +21,7 @@ export function createLogger(name: string) {
     },
     timestamp: () => `,"time":"${new Date(Date.now()).toISOString()}"`,
     formatters: {
-      level: (label) => {
+      level: (label: string) => {
         return { level: label };
       },
     },
@@ -53,6 +32,8 @@ export function createLogger(name: string) {
       },
     },
   });
+
+  return logger;
 }
 
 /**
