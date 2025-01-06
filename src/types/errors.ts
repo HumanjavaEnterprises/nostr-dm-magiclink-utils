@@ -2,16 +2,18 @@
  * Custom error class for Nostr-related errors
  */
 export enum NostrErrorCode {
+  INVALID_CONFIG = 'INVALID_CONFIG',
+  RELAY_ERROR = 'RELAY_ERROR',
+  MESSAGE_SEND_FAILED = 'MESSAGE_SEND_FAILED',
+  ENCRYPTION_FAILED = 'ENCRYPTION_FAILED',
+  DECRYPTION_FAILED = 'DECRYPTION_FAILED',
   EVENT_CREATION_FAILED = 'EVENT_CREATION_FAILED',
   EVENT_VERIFICATION_FAILED = 'EVENT_VERIFICATION_FAILED',
   RELAY_CONNECTION_FAILED = 'RELAY_CONNECTION_FAILED',
-  RELAY_ERROR = 'RELAY_ERROR',
-  MESSAGE_SEND_FAILED = 'MESSAGE_SEND_FAILED',
-  INVALID_KEY = 'INVALID_KEY',
-  ENCRYPTION_FAILED = 'ENCRYPTION_FAILED',
-  DECRYPTION_FAILED = 'DECRYPTION_FAILED',
   CONFIGURATION_ERROR = 'CONFIGURATION_ERROR',
-  MISSING_REQUIRED_FIELDS = 'MISSING_REQUIRED_FIELDS'
+  TOKEN_GENERATION_ERROR = 'TOKEN_GENERATION_ERROR',
+  GENERAL_ERROR = 'GENERAL_ERROR',
+  INVALID_PARAMETERS = 'INVALID_PARAMETERS'
 }
 
 /**
@@ -27,11 +29,19 @@ export class NostrError extends Error {
    */
   constructor(
     message: string,
-    public code: NostrErrorCode,
-    public originalError?: Error
+    public readonly code: NostrErrorCode | string = NostrErrorCode.INVALID_PARAMETERS,
+    public readonly originalError?: Error
   ) {
     super(message);
     this.name = 'NostrError';
-    Object.setPrototypeOf(this, NostrError.prototype);
   }
+}
+
+/**
+ * Interface for error details
+ */
+export interface ErrorDetails {
+  message: string;
+  code: NostrErrorCode | string;
+  originalError?: Error;
 }

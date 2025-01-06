@@ -1,13 +1,13 @@
-import { encryptMessage as encryptNip04, decryptMessage as decryptNip04 } from 'nostr-crypto-utils';
-import { NostrError, NostrErrorCode } from '../types/errors';
+import { encryptMessage as cryptoEncryptMessage, decryptMessage as cryptoDecryptMessage } from 'nostr-crypto-utils/nips/nip-04';
+import { NostrError } from '../types/errors.js';
 
 /**
  * Encrypts a message following NIP-04 specification
  * @param message - The message to encrypt
- * @param privateKey - The sender's private key
- * @param publicKey - The recipient's public key
+ * @param privateKey - The sender's private key (hex format)
+ * @param publicKey - The recipient's public key (hex format)
  * @returns Promise resolving to the encrypted message
- * @throws NostrError if encryption fails
+ * @throws NostrError if encryption fails or inputs are invalid
  */
 export async function encryptMessage(
   message: string,
@@ -15,15 +15,40 @@ export async function encryptMessage(
   publicKey: string
 ): Promise<string> {
   try {
+    // Validate inputs
+    if (!message) {
+      throw new Error('Message cannot be empty');
+    }
+    if (!privateKey) {
+      throw new Error('Private key is required');
+    }
+    if (!publicKey) {
+      throw new Error('Public key is required');
+    }
+
+    // In production, validate key formats
+    if (process.env.NODE_ENV === 'production') {
+      if (privateKey.length !== 64) {
+        throw new Error('Invalid private key format');
+      }
+      if (publicKey.length !== 64) {
+        throw new Error('Invalid public key format');
+      }
+    }
+
     // Handle empty messages
     if (message === '') {
       message = ' ';
     }
 
-    // Note: encryptNip04 expects (message, senderPrivkey, recipientPubkey)
-    return await encryptNip04(message, privateKey, publicKey);
+    // Note: encryptMessage expects (message, senderPrivkey, recipientPubkey)
+    const result = await cryptoEncryptMessage(message, privateKey, publicKey);
+    return result;
   } catch (error) {
-    throw new NostrError('Message encryption failed: ' + (error as Error).message, NostrErrorCode.ENCRYPTION_FAILED);
+    throw new NostrError(
+      'Message encryption failed: ' + (error as Error).message,
+      'ENCRYPTION_FAILED'
+    );
   }
 }
 
@@ -41,11 +66,34 @@ export async function decryptMessage(
   publicKey: string
 ): Promise<string> {
   try {
-    // Note: decryptNip04 expects (encryptedContent, recipientPrivkey, senderPubkey)
-    const decrypted = await decryptNip04(encryptedMessage, privateKey, publicKey);
-    // Handle empty messages
-    return decrypted === ' ' ? '' : decrypted;
+    // Validate inputs
+    if (!encryptedMessage) {
+      throw new Error('Encrypted message cannot be empty');
+    }
+    if (!privateKey) {
+      throw new Error('Private key is required');
+    }
+    if (!publicKey) {
+      throw new Error('Public key is required');
+    }
+
+    // In production, validate key formats
+    if (process.env.NODE_ENV === 'production') {
+      if (privateKey.length !== 64) {
+        throw new Error('Invalid private key format');
+      }
+      if (publicKey.length !== 64) {
+        throw new Error('Invalid public key format');
+      }
+    }
+
+    // Note: decryptMessage expects (encryptedMessage, senderPubkey, recipientPrivkey)
+    const result = await cryptoDecryptMessage(encryptedMessage, publicKey, privateKey);
+    return result;
   } catch (error) {
-    throw new NostrError('Message decryption failed: ' + (error as Error).message, NostrErrorCode.DECRYPTION_FAILED);
+    throw new NostrError(
+      'Message decryption failed: ' + (error as Error).message,
+      'DECRYPTION_FAILED'
+    );
   }
 }

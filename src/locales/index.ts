@@ -1,13 +1,13 @@
-import en from './en';
-import es from './es';
-import fr from './fr';
-import ar from './ar';
-import ja from './ja';
-import pt from './pt';
-import zh from './zh';
-import ko from './ko';
-import ru from './ru';
-import { validatePlainText, validateUrl } from '../utils/text-validator';
+import en from './en.js';
+import es from './es.js';
+import fr from './fr.js';
+import ar from './ar.js';
+import ja from './ja.js';
+import pt from './pt.js';
+import zh from './zh.js';
+import ko from './ko.js';
+import ru from './ru.js';
+import { validatePlainText, validateUrl } from '../utils/text-validator.js';
 
 /**
  * Enum of supported locales

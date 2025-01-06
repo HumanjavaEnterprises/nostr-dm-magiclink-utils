@@ -1,5 +1,7 @@
-import { NostrEvent } from 'nostr-crypto-utils';
-import { SendMagicLinkOptions, MagicLinkResponse, NostrMagicLinkConfig } from './config';
+// Define NostrEvent type according to NIP-01
+import { NostrEvent } from './nostr.js';
+
+import type { SendMagicLinkOptions, MagicLinkResponse, NostrMagicLinkConfig } from './config.js';
 
 export interface NostrServiceInterface {
   /** Connect to the Nostr relay */

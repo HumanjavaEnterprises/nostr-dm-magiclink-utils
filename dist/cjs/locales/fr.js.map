@@ -1,0 +1,1 @@
+{"version":3,"file":"fr.js","sourceRoot":"","sources":["../../../src/locales/fr.ts"],"names":[],"mappings":"AAAA,eAAe;IACb,SAAS,EAAE,KAAc;IACzB,SAAS,EAAE;QACT,KAAK,EAAE,yDAAyD;QAChE,WAAW,EAAE,qDAAqD;QAClE,MAAM,EAAE,4CAA4C;QACpD,WAAW,EAAE,yBAAyB;QACtC,OAAO,EAAE;YACP,QAAQ,EAAE,4BAA4B;YACtC,MAAM,EAAE,uBAAuB;YAC/B,SAAS,EAAE,oCAAoC;YAC/C,aAAa,EAAE,oCAAoC;SACpD;KACF;CACO,CAAC"}

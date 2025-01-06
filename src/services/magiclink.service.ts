@@ -1,13 +1,13 @@
-import { NostrServiceInterface, MagicLinkServiceInterface } from '../types/service';
+import { NostrServiceInterface, MagicLinkServiceInterface } from '../types/service.js';
 import { 
   MagicLinkConfig, 
   SendMagicLinkOptions, 
   MagicLinkResponse,
   MessageOptions 
-} from '../types';
-import { createLogger } from '../utils/logger';
+} from '../types/config.js';
+import { createLogger } from '../utils/logger.js';
 import { Logger } from 'pino';
-import { NostrError, NostrErrorCode, ErrorDetails } from '../types';
+import { NostrError, NostrErrorCode } from '../types/index.js';
 import jwt from 'jsonwebtoken';
 
 /**
@@ -63,11 +63,12 @@ export class MagicLinkService implements MagicLinkServiceInterface {
         magicLink: link
       };
     } catch (error) {
-      this.handleError(error, 'send magic link');
-      return {
-        success: false,
-        error: 'Failed to send magic link'
-      };
+      const errorDetails: NostrError = new NostrError(
+        'Failed to send magic link',
+        NostrErrorCode.GENERAL_ERROR,
+        error instanceof Error ? error : undefined
+      );
+      throw errorDetails;
     }
   }
 
@@ -90,8 +91,12 @@ export class MagicLinkService implements MagicLinkServiceInterface {
       this.logger.debug({ pubkey: decoded.pubkey }, 'Token verified successfully');
       return decoded.pubkey;
     } catch (error) {
-      this.handleError(error, 'verify magic link');
-      return null;
+      const errorDetails: NostrError = new NostrError(
+        'Failed to verify magic link',
+        NostrErrorCode.GENERAL_ERROR,
+        error instanceof Error ? error : undefined
+      );
+      throw errorDetails;
     }
   }
 
@@ -108,11 +113,12 @@ export class MagicLinkService implements MagicLinkServiceInterface {
       }
       return this.config.token;
     } catch (error) {
-      this.handleError(error, 'generate token');
-      throw new NostrError(
+      const errorDetails: NostrError = new NostrError(
         'Failed to generate token',
-        NostrErrorCode.TOKEN_GENERATION_ERROR
+        NostrErrorCode.TOKEN_GENERATION_ERROR,
+        error instanceof Error ? error : undefined
       );
+      throw errorDetails;
     }
   }
 
@@ -150,17 +156,5 @@ export class MagicLinkService implements MagicLinkServiceInterface {
     }
 
     return message;
-  }
-
-  private handleError(error: unknown, operation: string): never {
-    const details: ErrorDetails = {
-      cause: error instanceof Error ? error : new Error('Unknown error occurred')
-    };
-
-    throw new NostrError(
-      `Failed to ${operation}`,
-      NostrErrorCode.GENERAL_ERROR,
-      details
-    );
   }
 }

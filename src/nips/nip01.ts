@@ -4,8 +4,8 @@
  */
 
 import { getPublicKey, signEvent as cryptoSignEvent, verifySignature as cryptoVerifySignature } from 'nostr-crypto-utils';
-import { NostrError, NostrErrorCode } from '../types/errors';
-import { NostrEvent, SignedNostrEvent, EventParams, SignEventParams } from '../types/nostr';
+import { NostrError, NostrErrorCode } from '../types/errors.js';
+import { NostrEvent, SignedNostrEvent, EventParams, SignEventParams } from '../types/nostr.js';
 import { sha256 } from '@noble/hashes/sha256';
 import { bytesToHex } from '@noble/hashes/utils';
 

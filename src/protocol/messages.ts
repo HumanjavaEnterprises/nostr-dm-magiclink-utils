@@ -3,15 +3,22 @@
  * @description Message handling for Nostr protocol
  */
 
-import { encryptMessage } from 'nostr-crypto-utils';
-import { logger } from '../utils/logger';
-import { NostrError, NostrErrorCode } from '../types/nostr';
+import { Logger } from 'pino';
+import { createLogger } from '../utils/logger.js';
+import { NostrError, NostrErrorCode } from '../types/errors.js';
+import { encryptMessage as nip04Encrypt } from '../nips/nip04.js';
 
 /**
  * Manages message encryption and verification for Nostr protocol
  * Provides utilities for secure message handling between users
  */
 export class MessageManager {
+    private logger: Logger;
+
+    constructor() {
+        this.logger = createLogger('MessageManager');
+    }
+
     /**
      * Encrypt a message for a recipient
      * @param content Message content to encrypt
@@ -26,12 +33,12 @@ export class MessageManager {
         senderPrivateKey: string
     ): Promise<string> {
         try {
-            return await encryptMessage(content, recipientPubkey, senderPrivateKey);
+            return await nip04Encrypt(content, senderPrivateKey, recipientPubkey);
         } catch (error) {
             throw new NostrError(
                 'Failed to encrypt message',
                 NostrErrorCode.ENCRYPTION_FAILED,
-                { cause: error }
+                error as Error
             );
         }
     }
@@ -45,13 +52,13 @@ export class MessageManager {
     async verifyMessage(senderPubkey: string): Promise<boolean> {
         try {
             // Implementation for message verification
-            logger.info('Message verified from:', senderPubkey);
+            this.logger.info('Message verified from:', senderPubkey);
             return true;
         } catch (error) {
             throw new NostrError(
                 'Failed to verify message',
-                NostrErrorCode.VERIFICATION_FAILED,
-                { cause: error }
+                NostrErrorCode.EVENT_VERIFICATION_FAILED,
+                error as Error
             );
         }
     }

@@ -7,13 +7,18 @@ vi.mock('nostr-crypto-utils', () => {
       publicKey: 'test-public-key',
       privateKey: 'test-private-key'
     }),
-    encryptMessage: async (message: string, privateKey: string, publicKey: string) => {
+    encrypt: async (message: string, privateKey: string, publicKey: string) => {
       if (!privateKey || !publicKey) {
         throw new Error('Invalid parameters');
       }
       return 'encrypted_message';
     },
-    decryptMessage: () => Promise.resolve('decrypted_message')
+    decrypt: async (encryptedMessage: string, privateKey: string, publicKey: string) => {
+      if (!privateKey || !publicKey) {
+        throw new Error('Invalid parameters');
+      }
+      return 'decrypted_message';
+    }
   };
 });
 
@@ -30,7 +35,7 @@ describe('NIP-04: Encrypted Direct Messages', () => {
 
     it('should handle error cases appropriately', async () => {
       await expect(encryptMessage('test', '', recipientPublicKey))
-        .rejects.toThrow('Invalid parameters');
+        .rejects.toThrow('Private key is required');
     });
   });
 });

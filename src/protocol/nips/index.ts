@@ -1,2 +1,2 @@
-export * from './nip01';
-export * from './nip04';
+export * from './nip01.js';
+export * from './nip04.js';

@@ -1,0 +1,1 @@
+{"version":3,"file":"zh.js","sourceRoot":"","sources":["../../../src/locales/zh.ts"],"names":[],"mappings":"AAAA,eAAe;IACb,SAAS,EAAE,KAAc;IACzB,SAAS,EAAE;QACT,KAAK,EAAE,iBAAiB;QACxB,WAAW,EAAE,SAAS;QACtB,MAAM,EAAE,kBAAkB;QAC1B,WAAW,EAAE,SAAS;QACtB,OAAO,EAAE;YACP,QAAQ,EAAE,kBAAkB;YAC5B,MAAM,EAAE,gBAAgB;YACxB,SAAS,EAAE,qBAAqB;YAChC,aAAa,EAAE,yBAAyB;SACzC;KACF;CACO,CAAC"}

@@ -1,5 +1,5 @@
 /**
- * @module logger
+ * @file Logger utility
  * @description Logger utility for the application
  */
 
@@ -8,68 +8,51 @@ import pino from 'pino';
 /**
  * Redacts sensitive data from objects before logging
  * @param obj - Object to redact
+ * @param sensitiveKeys - Array of sensitive keys to redact
  * @returns Redacted object
  */
-function redactSensitiveData(obj: unknown): unknown {
-  if (!obj || typeof obj !== 'object') return obj;
-
-  const sensitiveFields = ['privkey', 'nsec', 'secret', 'password', 'token'];
-  const redactedObj: Record<string, unknown> = { ...obj as Record<string, unknown> };
-
-  for (const key in redactedObj) {
-    if (sensitiveFields.some(field => key.toLowerCase().includes(field))) {
-      redactedObj[key] = '[REDACTED]';
-    } else if (typeof redactedObj[key] === 'object') {
-      redactedObj[key] = redactSensitiveData(redactedObj[key]);
-    }
+function redactSensitiveData(obj: any, sensitiveKeys: string[] = ['privateKey', 'secret', 'password', 'token']): any {
+  if (typeof obj !== 'object' || obj === null) {
+    return obj;
   }
 
-  return redactedObj;
+  const redacted = { ...obj };
+  for (const key in redacted) {
+    if (sensitiveKeys.includes(key)) {
+      redacted[key] = '[REDACTED]';
+    } else if (typeof redacted[key] === 'object') {
+      redacted[key] = redactSensitiveData(redacted[key], sensitiveKeys);
+    }
+  }
+  return redacted;
 }
 
 /**
- * Create a logger instance with consistent configuration
- * @param name - Component or module name for the logger
- * @returns Configured pino logger instance
+ * Creates a logger instance with the given name
+ * @param name - Name for the logger instance
+ * @returns Pino logger instance
  */
-export function createLogger(name: string): pino.Logger {
-  return pino({
+export function createLogger(name: string) {
+  return pino.default({
     name,
     level: process.env.LOG_LEVEL || 'info',
-    transport: process.env.NODE_ENV === 'development' ? {
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-        translateTime: 'HH:MM:ss',
-        ignore: 'pid,hostname',
-      }
-    } : undefined,
+    redact: {
+      paths: ['privateKey', 'secret', 'password', 'token'],
+      censor: '[REDACTED]'
+    },
+    timestamp: pino.stdTimeFunctions.isoTime,
     formatters: {
       level: (label) => {
-        return { level: label.toUpperCase() };
+        return { level: label };
       },
-      log: (obj: Record<string, unknown>) => {
-        // Redact sensitive data
-        return redactSensitiveData(obj) as Record<string, unknown>;
-      }
-    },
-    mixin: () => ({})
+      // Use redactSensitiveData for log objects
+      log: (obj) => redactSensitiveData(obj)
+    }
   });
 }
 
 /**
- * Simple log function for basic logging needs
- * @param message - Message to log
- * @param data - Optional data to include
- */
-export function log(message: string, data?: unknown): void {
-  const redactedData = data ? redactSensitiveData(data) : undefined;
-  console.log(message, redactedData);
-}
-
-/**
- * Default logger instance for the application
- * Includes enhanced error handling and formatting
+ * Default logger instance for the library
  */
 export const logger = createLogger('nostr-dm-magiclink-utils');
 

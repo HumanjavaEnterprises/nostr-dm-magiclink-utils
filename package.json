@@ -1,12 +1,13 @@
 {
   "name": "nostr-dm-magiclink-utils",
-  "version": "0.1.4",
-  "description": "A comprehensive Nostr utility library for magic link authentication via direct messages. Features include NIP-01/04 compliant message encryption, multi-relay support, internationalization (i18n) with RTL support, and TypeScript-first development. Ideal for building secure, user-friendly authentication flows in Nostr applications.",
+  "version": "0.1.5",
+  "description": "A comprehensive Nostr utility library for magic link authentication via direct messages, supporting both ESM and CommonJS. Features NIP-01/04 compliant message encryption, multi-relay support, internationalization (i18n) with RTL support, and TypeScript-first development.",
   "author": "vveerrgg",
   "license": "MIT",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/HumanjavaEnterprises/nostr-dm-magiclink-utils.git"
@@ -16,7 +17,7 @@
   },
   "homepage": "https://github.com/HumanjavaEnterprises/nostr-dm-magiclink-utils#readme",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc -p tsconfig.cjs.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -31,6 +32,7 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
+      "require": "./dist/cjs/index.js",
       "default": "./dist/index.js"
     }
   },
@@ -44,7 +46,7 @@
     "jsonwebtoken": "^9.0.2",
     "nostr-crypto-utils": "^0.4.10",
     "nostr-nsec-seedphrase": "^0.1.1",
-    "nostr-websocket-utils": "^0.3.10",
+    "nostr-websocket-utils": "^0.3.11",
     "pino": "^8.16.0"
   },
   "devDependencies": {
@@ -64,9 +66,18 @@
   },
   "keywords": [
     "nostr",
-    "authentication",
     "magic-link",
-    "typescript"
+    "authentication",
+    "direct-messages",
+    "typescript",
+    "esm",
+    "commonjs",
+    "dual-module",
+    "nostr-protocol",
+    "nip-01",
+    "nip-04",
+    "i18n",
+    "rtl-support"
   ],
   "engines": {
     "node": ">=18.0.0"

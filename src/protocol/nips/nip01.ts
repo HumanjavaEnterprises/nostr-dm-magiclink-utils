@@ -1,6 +1,6 @@
 import { Event, getEventHash, getPublicKey, getSignature, validateEvent, verifySignature } from 'nostr-tools';
-import { NostrError, NostrErrorCode } from '../../types';
-import { logger } from '../../utils/logger';
+import { NostrError, NostrErrorCode } from '../../types/index.js';
+import { logger } from '../../utils/logger.js';
 
 /**
  * Create a signed Nostr event
@@ -37,8 +37,8 @@ export const createEvent = (
     logger.error('Failed to create event', { error });
     throw new NostrError(
       'Failed to create event',
-      NostrErrorCode.EVENT_CREATION_ERROR,
-      { cause: error }
+      NostrErrorCode.EVENT_CREATION_FAILED,
+      error instanceof Error ? error : undefined
     );
   }
 };

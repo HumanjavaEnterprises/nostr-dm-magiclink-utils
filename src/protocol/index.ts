@@ -3,5 +3,5 @@
  * @description Core Nostr protocol implementation
  */
 
-export * from './nips';
-export * from './messages';
+export * from './nips/index.js';
+export * from './messages.js';

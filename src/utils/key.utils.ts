@@ -1,6 +1,6 @@
 import { nip19, validateEvent } from 'nostr-tools';
-import { NostrError, NostrErrorCode } from '../types/nostr';
-import { logger } from './logger';
+import { NostrError, NostrErrorCode } from '../types/nostr.js';
+import { logger } from './logger.js';
 
 /**
  * Validate a Nostr private key

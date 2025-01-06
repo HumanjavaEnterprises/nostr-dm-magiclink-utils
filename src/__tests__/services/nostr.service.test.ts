@@ -17,7 +17,7 @@ vi.mock('nostr-websocket-utils', () => ({
 }));
 
 vi.mock('nostr-crypto-utils', () => ({
-  encryptMessage: vi.fn().mockResolvedValue('encrypted_test message'),
+  encrypt: vi.fn().mockResolvedValue('encrypted_test message'),
   generateKeyPair: vi.fn().mockResolvedValue({
     publicKey: 'pub_test-private-key',
     privateKey: 'test-private-key'

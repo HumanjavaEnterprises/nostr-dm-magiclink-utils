@@ -1,0 +1,1 @@
+{"version":3,"file":"ar.js","sourceRoot":"","sources":["../../src/locales/ar.ts"],"names":[],"mappings":"AAAA,eAAe;IACb,SAAS,EAAE,KAAc;IACzB,SAAS,EAAE;QACT,KAAK,EAAE,+BAA+B;QACtC,WAAW,EAAE,qBAAqB;QAClC,MAAM,EAAE,uCAAuC;QAC/C,WAAW,EAAE,qBAAqB;QAClC,UAAU,EAAE,wBAAwB;QACpC,QAAQ,EAAE,uBAAuB;QACjC,MAAM,EAAE,sBAAsB;KAC/B;CACO,CAAC"}

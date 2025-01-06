@@ -1,12 +1,12 @@
-import { encryptMessage } from 'nostr-crypto-utils';
+import { encrypt } from 'nostr-crypto-utils';
 import { NostrWSClient } from 'nostr-websocket-utils';
-import { NostrServiceInterface } from '../types/service';
-import { NostrError, NostrErrorCode } from '../types/errors';
-import { NostrServiceConfig } from '../types/config';
-import { SignEventParams, NostrEvent } from '../types/nostr';
-import { signedEvent } from '../nips/nip01';
+import { NostrServiceInterface } from '../types/service.js';
+import { NostrError, NostrErrorCode } from '../types/errors.js';
+import { NostrServiceConfig } from '../types/config.js';
+import { SignEventParams, NostrEvent } from '../types/nostr.js';
+import { signedEvent } from '../nips/nip01.js';
 import { Logger } from 'pino';
-import { createLogger } from '../utils/logger';
+import { createLogger } from '../utils/logger.js';
 
 /**
  * Implementation of the Nostr service for handling direct messages
@@ -177,7 +177,7 @@ export class NostrService implements NostrServiceInterface {
       }
 
       // Encrypt the message
-      const encryptedContent = await encryptMessage(
+      const encryptedContent = await encrypt(
         content,
         this.config.privateKey,
         pubkey

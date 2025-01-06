@@ -7,9 +7,9 @@ node_modules/
 coverage/
 .nyc_output/
 
-# Production
-dist/
-build/
+# Build artifacts
+*.tsbuildinfo
+*.tgz
 
 # Development
 .env
@@ -19,34 +19,18 @@ build/
 .env.production.local
 .env.test
 
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-
-# Debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# System Files
 .DS_Store
-Thumbs.db
 
-# Local Files
-local/
-tmp/
-*.log
-
-# Documentation
-docs/
-
-# Keys and Secrets
-.keys/
-*.pem
-*.key
-*.cert
-
-# Local Development Files
+# Project specific
 CHECKLIST.md

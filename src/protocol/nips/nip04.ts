@@ -4,8 +4,8 @@
  * Spec: https://github.com/nostr-protocol/nips/blob/master/04.md
  */
 
-import { encryptMessage } from 'nostr-crypto-utils';
-import { NostrEvent } from '../../types/nostr';
+import { encrypt } from 'nostr-crypto-utils';
+import { NostrEvent } from '../../types/nostr.js';
 
 export const NIP04_KIND = 4;
 
@@ -29,7 +29,7 @@ export async function createEncryptedDirectMessage(
   senderPrivateKey: string,
   senderPubkey: string
 ): Promise<Partial<NostrEvent>> {
-  const encryptedContent = await encryptMessage(content, recipientPubkey, senderPrivateKey);
+  const encryptedContent = await encrypt(content, senderPrivateKey, recipientPubkey);
 
   return {
     kind: NIP04_KIND,

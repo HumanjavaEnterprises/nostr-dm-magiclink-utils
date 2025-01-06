@@ -1,4 +1,4 @@
-import { NostrError, NostrErrorCode } from '../types/nostr';
+import { NostrError, NostrErrorCode } from '../types/nostr.js';
 import dotenv from 'dotenv';
 
 export interface Config {
