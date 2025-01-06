@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { encryptMessage, decryptMessage } from '../nips/nip04';
+import { encryptMessage } from 'nostr-crypto-utils/nips/nip-04';
 
 // Mock the crypto utils module
 vi.mock('nostr-crypto-utils/nips/nip-04', () => ({

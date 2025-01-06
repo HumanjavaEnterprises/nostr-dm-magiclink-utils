@@ -27,20 +27,16 @@ vi.mock('nostr-crypto-utils', () => ({
     signEvent: vi.fn().mockReturnValue('test-signature')
 }));
 // Mock pino logger
-vi.mock('pino', () => ({
-    default: vi.fn().mockReturnValue({
+vi.mock('pino', () => {
+    const mockLogger = {
         info: vi.fn(),
         error: vi.fn(),
         warn: vi.fn(),
         debug: vi.fn(),
-        child: vi.fn().mockReturnValue({
-            info: vi.fn(),
-            error: vi.fn(),
-            warn: vi.fn(),
-            debug: vi.fn()
-        })
-    })
-}));
+        child: vi.fn().mockReturnThis()
+    };
+    return vi.fn().mockReturnValue(mockLogger);
+});
 beforeAll(() => {
     // Any global setup
 });

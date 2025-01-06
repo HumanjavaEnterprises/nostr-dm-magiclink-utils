@@ -7,6 +7,9 @@
  * Provides utilities for secure message handling between users
  */
 export declare class MessageManager {
+    /**
+     * Logger instance for message handling
+     */
     private logger;
     constructor();
     /**

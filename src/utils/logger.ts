@@ -1,45 +1,46 @@
 /**
  * @file Logger utility
- * @description Logger utility for the application
+ * @module utils/logger
  */
 
-import pino from 'pino';
-import { Logger } from 'pino';
+import { createRequire } from 'module';
+import type { Logger } from 'pino';
+
+const require = createRequire(import.meta.url);
+const pino = require('pino');
 
 /**
- * Creates a logger instance with the specified name
- * @param name - Name for the logger instance
- * @returns Pino logger instance
+ * Create a new logger instance
+ * @param name Name of the logger
+ * @returns Logger instance
  */
 export function createLogger(name: string): Logger {
-  const logger = pino.default({
+  return pino({
     name,
-    level: process.env.LOG_LEVEL || 'info',
-    redact: {
-      paths: ['nsec', 'privkey', 'sk', 'secret', 'password', 'apiKey'],
-      censor: '[REDACTED]'
-    },
-    timestamp: () => `,"time":"${new Date(Date.now()).toISOString()}"`,
-    formatters: {
-      level: (label: string) => {
-        return { level: label };
-      },
-    },
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-      },
-    },
+    level: process.env.LOG_LEVEL || 'info'
   });
-
-  return logger;
 }
 
 /**
- * Default logger instance for the library
+ * Get a logger instance for a specific component
+ * @param component Component name for the logger
+ * @returns Logger instance
+ */
+export function getLogger(component: string): Logger {
+  return createLogger(component);
+}
+
+/**
+ * Get a child logger instance
+ * @param parent Parent logger instance
+ * @param bindings Additional bindings for the child logger
+ * @returns Child logger instance
+ */
+export function getChildLogger(parent: Logger, bindings: object): Logger {
+  return parent.child(bindings);
+}
+
+/**
+ * Default logger instance
  */
 export const logger = createLogger('nostr-dm-magiclink-utils');
-
-// Re-export the Logger type for use in other files
-export type { Logger } from 'pino';

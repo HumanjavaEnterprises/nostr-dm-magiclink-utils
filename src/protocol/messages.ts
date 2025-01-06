@@ -13,6 +13,9 @@ import { encryptMessage as nip04Encrypt } from '../nips/nip04.js';
  * Provides utilities for secure message handling between users
  */
 export class MessageManager {
+    /**
+     * Logger instance for message handling
+     */
     private logger: Logger;
 
     constructor() {

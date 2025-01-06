@@ -1,18 +1,29 @@
 /**
  * @file Logger utility
- * @description Logger utility for the application
+ * @module utils/logger
  */
-import pino from 'pino';
-import { Logger } from 'pino';
+import type { Logger } from 'pino';
 /**
- * Creates a logger instance with the specified name
- * @param name - Name for the logger instance
- * @returns Pino logger instance
+ * Create a new logger instance
+ * @param name Name of the logger
+ * @returns Logger instance
  */
 export declare function createLogger(name: string): Logger;
 /**
- * Default logger instance for the library
+ * Get a logger instance for a specific component
+ * @param component Component name for the logger
+ * @returns Logger instance
  */
-export declare const logger: pino.Logger;
-export type { Logger } from 'pino';
+export declare function getLogger(component: string): Logger;
+/**
+ * Get a child logger instance
+ * @param parent Parent logger instance
+ * @param bindings Additional bindings for the child logger
+ * @returns Child logger instance
+ */
+export declare function getChildLogger(parent: Logger, bindings: object): Logger;
+/**
+ * Default logger instance
+ */
+export declare const logger: Logger;
 //# sourceMappingURL=logger.d.ts.map
