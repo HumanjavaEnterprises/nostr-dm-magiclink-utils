@@ -33,21 +33,25 @@ function redactSensitiveData(obj: any, sensitiveKeys: string[] = ['privateKey', 
  * @returns Pino logger instance
  */
 export function createLogger(name: string) {
-  return pino.default({
+  return pino({
     name,
     level: process.env.LOG_LEVEL || 'info',
     redact: {
-      paths: ['privateKey', 'secret', 'password', 'token'],
+      paths: ['nsec', 'privkey', 'sk', 'secret', 'password', 'apiKey'],
       censor: '[REDACTED]'
     },
-    timestamp: pino.stdTimeFunctions.isoTime,
+    timestamp: () => `,"time":"${new Date(Date.now()).toISOString()}"`,
     formatters: {
       level: (label) => {
         return { level: label };
       },
-      // Use redactSensitiveData for log objects
-      log: (obj) => redactSensitiveData(obj)
-    }
+    },
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        colorize: true,
+      },
+    },
   });
 }
 
