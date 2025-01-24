@@ -1,16 +1,16 @@
 import { NostrService } from './services/nostr.service.js';
-import { MagicLinkService } from './services/magiclink.service.js';
+import { MagicLinkManager } from './services/magiclink.service.js';
 import { NostrMagicLinkConfig } from './types/config.js';
 import { createLogger } from './utils/logger.js';
 
 const logger = createLogger('nostr-dm-magiclink-utils');
 
 /**
- * Create a new instance of the magic link service
+ * Create a new instance of the magic link manager
  * @param config Service configuration
- * @returns MagicLinkService instance
+ * @returns MagicLinkManager instance
  */
-export function createMagicLinkService(config: NostrMagicLinkConfig): MagicLinkService {
+export function createMagicLinkService(config: NostrMagicLinkConfig): MagicLinkManager {
   // Validate required configuration
   if (!config.magicLink.token) {
     throw new Error('Token is required');
@@ -20,9 +20,9 @@ export function createMagicLinkService(config: NostrMagicLinkConfig): MagicLinkS
     throw new Error('Verify URL is required');
   }
 
-  logger.info('Creating magic link service');
+  logger.info('Creating magic link manager');
   const nostrService = new NostrService(config.nostr);
-  return new MagicLinkService(nostrService, config.magicLink);
+  return new MagicLinkManager(nostrService, config.magicLink);
 }
 
 // Export types

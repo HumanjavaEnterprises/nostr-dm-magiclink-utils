@@ -41,7 +41,7 @@ import { createNostrMagicLink, NostrError } from 'nostr-dm-magiclink-utils';
 import { generatePrivateKey } from 'nostr-tools'; // For demo purposes
 
 async function setupAuthService() {
-  // Create service with secure configuration
+  // Create manager with secure configuration
   const magicLink = createNostrMagicLink({
     nostr: {
       // In production, load from secure environment variable

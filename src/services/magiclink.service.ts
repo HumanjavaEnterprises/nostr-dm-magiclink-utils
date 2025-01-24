@@ -11,10 +11,10 @@ import { NostrError, NostrErrorCode } from '../types/index.js';
 import jwt from 'jsonwebtoken';
 
 /**
- * Service for handling magic link authentication
+ * Manager for handling magic link authentication
  * Manages generation, sending, and verification of magic links through Nostr protocol
  */
-export class MagicLinkService implements MagicLinkServiceInterface {
+export class MagicLinkManager implements MagicLinkServiceInterface {
   private readonly logger: Logger;
   private readonly defaultTemplate: Record<string, string> = {
     en: 'Click this magic link to login: {{link}}',
@@ -29,7 +29,7 @@ export class MagicLinkService implements MagicLinkServiceInterface {
   };
 
   /**
-   * Creates a new instance of MagicLinkService
+   * Creates a new instance of MagicLinkManager
    * @param nostrService - Service for handling Nostr protocol operations
    * @param config - Configuration for magic link functionality
    * @param logger - Optional logger instance. If not provided, creates a new logger
@@ -39,7 +39,7 @@ export class MagicLinkService implements MagicLinkServiceInterface {
     private readonly config: MagicLinkConfig,
     logger?: Logger
   ) {
-    this.logger = logger || createLogger('MagicLinkService');
+    this.logger = logger || createLogger('MagicLinkManager');
   }
 
   /**
