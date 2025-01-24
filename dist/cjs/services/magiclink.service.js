@@ -2,10 +2,10 @@ import { createLogger } from '../utils/logger.js';
 import { NostrError, NostrErrorCode } from '../types/index.js';
 import jwt from 'jsonwebtoken';
 /**
- * Service for handling magic link authentication
+ * Manager for handling magic link authentication
  * Manages generation, sending, and verification of magic links through Nostr protocol
  */
-export class MagicLinkService {
+export class MagicLinkManager {
     nostrService;
     config;
     logger;
@@ -21,7 +21,7 @@ export class MagicLinkService {
         zh: '点击此魔法链接登录：{{link}}'
     };
     /**
-     * Creates a new instance of MagicLinkService
+     * Creates a new instance of MagicLinkManager
      * @param nostrService - Service for handling Nostr protocol operations
      * @param config - Configuration for magic link functionality
      * @param logger - Optional logger instance. If not provided, creates a new logger
@@ -29,7 +29,7 @@ export class MagicLinkService {
     constructor(nostrService, config, logger) {
         this.nostrService = nostrService;
         this.config = config;
-        this.logger = logger || createLogger('MagicLinkService');
+        this.logger = logger || createLogger('MagicLinkManager');
     }
     /**
      * Sends a magic link to a recipient via Nostr direct message

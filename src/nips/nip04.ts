@@ -1,4 +1,4 @@
-import { encryptMessage as cryptoEncryptMessage, decryptMessage as cryptoDecryptMessage } from 'nostr-crypto-utils/nips/nip-04';
+import { encrypt as cryptoEncryptMessage, decrypt as cryptoDecryptMessage } from 'nostr-crypto-utils';
 import { NostrError } from '../types/errors.js';
 
 /**

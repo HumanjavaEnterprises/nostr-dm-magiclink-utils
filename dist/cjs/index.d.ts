@@ -1,11 +1,11 @@
-import { MagicLinkService } from './services/magiclink.service.js';
+import { MagicLinkManager } from './services/magiclink.service.js';
 import { NostrMagicLinkConfig } from './types/config.js';
 /**
- * Create a new instance of the magic link service
+ * Create a new instance of the magic link manager
  * @param config Service configuration
- * @returns MagicLinkService instance
+ * @returns MagicLinkManager instance
  */
-export declare function createMagicLinkService(config: NostrMagicLinkConfig): MagicLinkService;
+export declare function createMagicLinkService(config: NostrMagicLinkConfig): MagicLinkManager;
 export * from './types/index.js';
 export * from './services/nostr.service.js';
 export * from './services/magiclink.service.js';

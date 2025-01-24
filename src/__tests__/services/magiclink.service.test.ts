@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { MagicLinkService } from '../../services/magiclink.service';
-import { NostrService } from '../../services/nostr.service';
-import { MagicLinkConfig } from '../../types';
+import { MagicLinkManager } from '../../services/magiclink.service.js';
+import { NostrService } from '../../services/nostr.service.js';
+import { MagicLinkConfig } from '../../types/index.js';
 
 // Mock external dependencies
 vi.mock('nostr-crypto-utils', () => ({
@@ -11,7 +11,7 @@ vi.mock('nostr-crypto-utils', () => ({
   })
 }));
 
-describe('MagicLinkService', () => {
+describe('MagicLinkManager', () => {
   it('should send magic link successfully', async () => {
     const mockNostrService = {
       sendDirectMessage: vi.fn().mockResolvedValue({ id: 'test-event-id' })
@@ -22,7 +22,7 @@ describe('MagicLinkService', () => {
       token: 'test-token'
     };
 
-    const service = new MagicLinkService(mockNostrService, config);
+    const service = new MagicLinkManager(mockNostrService, config);
 
     const result = await service.sendMagicLink({
       recipientPubkey: 'test-public-key',

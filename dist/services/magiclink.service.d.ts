@@ -2,16 +2,16 @@ import { NostrServiceInterface, MagicLinkServiceInterface } from '../types/servi
 import { MagicLinkConfig, SendMagicLinkOptions, MagicLinkResponse } from '../types/config.js';
 import { Logger } from 'pino';
 /**
- * Service for handling magic link authentication
+ * Manager for handling magic link authentication
  * Manages generation, sending, and verification of magic links through Nostr protocol
  */
-export declare class MagicLinkService implements MagicLinkServiceInterface {
+export declare class MagicLinkManager implements MagicLinkServiceInterface {
     private readonly nostrService;
     private readonly config;
     private readonly logger;
     private readonly defaultTemplate;
     /**
-     * Creates a new instance of MagicLinkService
+     * Creates a new instance of MagicLinkManager
      * @param nostrService - Service for handling Nostr protocol operations
      * @param config - Configuration for magic link functionality
      * @param logger - Optional logger instance. If not provided, creates a new logger

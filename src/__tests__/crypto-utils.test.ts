@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
-import { encryptMessage } from 'nostr-crypto-utils/nips/nip-04';
+import { encrypt as encryptMessage } from 'nostr-crypto-utils';
 
 // Mock the crypto utils module
-vi.mock('nostr-crypto-utils/nips/nip-04', () => ({
-  encryptMessage: vi.fn().mockResolvedValue('encrypted_message'),
-  decryptMessage: vi.fn().mockResolvedValue('decrypted_message')
+vi.mock('nostr-crypto-utils', () => ({
+  encrypt: vi.fn().mockResolvedValue('encrypted_message'),
+  decrypt: vi.fn().mockResolvedValue('decrypted_message')
 }));
 
 describe('nostr-crypto-utils', () => {
