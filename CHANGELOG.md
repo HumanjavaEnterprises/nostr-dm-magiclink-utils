@@ -5,14 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2025-01-23
+## [0.2.0] - 2025-01-23
 
 ### Breaking Changes
 - Renamed `MagicLinkService` to `MagicLinkManager` for consistency with consumer usage
 - All instances of `MagicLinkService` in types and documentation have been updated to `MagicLinkManager`
 
+### Dependencies
+- Updated `nostr-crypto-utils` from ^0.4.10 to ^0.4.13
+  - Includes enhanced logging system
+  - Improved error handling and stack traces
+  - Better TypeScript type exports
+
 ### Migration Guide
 If you were using `MagicLinkService` directly, you'll need to update your imports and type references to use `MagicLinkManager` instead. If you were using the `createMagicLinkService` factory function, no changes are required as it will now return the correctly named type.
+
+Note: This package is still in MVP phase, hence the 0.x.x versioning. While we maintain backward compatibility within minor versions, the API may undergo significant changes before reaching 1.0.0.
 
 ## [0.1.4] - 2025-01-02
 

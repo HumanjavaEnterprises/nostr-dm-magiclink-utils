@@ -1,6 +1,6 @@
 {
   "name": "nostr-dm-magiclink-utils",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "description": "A comprehensive Nostr utility library for magic link authentication via direct messages, supporting both ESM and CommonJS. Features NIP-01/04 compliant message encryption, multi-relay support, internationalization (i18n) with RTL support, and TypeScript-first development.",
   "author": "vveerrgg",
   "license": "MIT",
@@ -44,7 +44,7 @@
     "@types/jsonwebtoken": "^9.0.7",
     "dotenv": "^16.3.1",
     "jsonwebtoken": "^9.0.2",
-    "nostr-crypto-utils": "^0.4.10",
+    "nostr-crypto-utils": "^0.4.13",
     "nostr-nsec-seedphrase": "^0.1.1",
     "nostr-websocket-utils": "^0.3.11",
     "pino": "^8.21.0"
