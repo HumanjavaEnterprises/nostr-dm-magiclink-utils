@@ -1,4 +1,4 @@
-import { Event } from 'nostr-tools';
+import { SignedNostrEvent } from '../../types/nostr.js';
 /**
  * Create a signed Nostr event
  * @param content Event content
@@ -7,11 +7,11 @@ import { Event } from 'nostr-tools';
  * @param tags Optional event tags
  * @returns Signed Nostr event
  */
-export declare const createEvent: (content: string, kind: number, privateKey: string, tags?: string[][]) => Event;
+export declare const createEvent: (content: string, kind: number, privateKey: string, tags?: string[][]) => Promise<SignedNostrEvent>;
 /**
  * Verify a Nostr event's signature and structure
  * @param event Event to verify
  * @returns True if event is valid, false otherwise
  */
-export declare const verifyEvent: (event: Event) => boolean;
+export declare const verifyEvent: (event: SignedNostrEvent) => Promise<boolean>;
 //# sourceMappingURL=nip01.d.ts.map

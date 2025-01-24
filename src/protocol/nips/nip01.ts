@@ -1,5 +1,6 @@
-import { Event, getEventHash, getPublicKey, getSignature, validateEvent, verifySignature } from 'nostr-tools';
-import { NostrError, NostrErrorCode } from '../../types/index.js';
+import { getPublicKey, signEvent, verifySignature } from 'nostr-crypto-utils';
+import { NostrError, NostrErrorCode } from '../../types/errors.js';
+import { NostrEvent, SignedNostrEvent } from '../../types/nostr.js';
 import { logger } from '../../utils/logger.js';
 
 /**
@@ -10,35 +11,36 @@ import { logger } from '../../utils/logger.js';
  * @param tags Optional event tags
  * @returns Signed Nostr event
  */
-export const createEvent = (
+export const createEvent = async (
   content: string,
   kind: number,
   privateKey: string,
   tags: string[][] = []
-): Event => {
+): Promise<SignedNostrEvent> => {
   try {
-    const pubkey = getPublicKey(privateKey);
-    const nonce = Math.random().toString(36).substring(2);
-    const event: Event = {
-      content: `${content}:${nonce}`,
+    const pubkey = await getPublicKey(privateKey);
+    const created_at = Math.floor(Date.now() / 1000);
+    const nonce = Math.floor(Math.random() * 1000000);
+
+    const event: NostrEvent = {
+      pubkey,
+      created_at,
       kind,
       tags,
-      created_at: Math.floor(Date.now() / 1000),
-      pubkey,
-      id: '',
-      sig: ''
+      content: `${content}:${nonce}`,
     };
 
-    event.id = getEventHash(event);
-    event.sig = getSignature(event, privateKey);
+    // Sign the event
+    const signedEventStr = await signEvent(event, privateKey);
+    const signedEvent = JSON.parse(signedEventStr) as SignedNostrEvent;
+    return signedEvent;
 
-    return event;
   } catch (error) {
-    logger.error('Failed to create event', { error });
+    logger.error('Error creating event:', error);
     throw new NostrError(
       'Failed to create event',
       NostrErrorCode.EVENT_CREATION_FAILED,
-      error instanceof Error ? error : undefined
+      error instanceof Error ? error : new Error(String(error))
     );
   }
 };
@@ -48,27 +50,25 @@ export const createEvent = (
  * @param event Event to verify
  * @returns True if event is valid, false otherwise
  */
-export const verifyEvent = (event: Event): boolean => {
+export const verifyEvent = async (event: SignedNostrEvent): Promise<boolean> => {
   try {
-    // Check basic event structure
-    if (!validateEvent(event)) {
+    const now = Math.floor(Date.now() / 1000);
+
+    // Check timestamp
+    if (event.created_at > now + 60) { // Allow 1 minute clock skew
+      logger.warn('Event from future');
+      return false;
+    }
+
+    if (event.created_at < now - 60 * 60 * 24 * 365) { // Reject events older than 1 year
+      logger.warn('Event too old');
       return false;
     }
 
     // Verify signature
-    if (!verifySignature(event)) {
-      return false;
-    }
-
-    // Check timestamp is not in the future
-    const now = Math.floor(Date.now() / 1000);
-    if (event.created_at > now + 60) { // Allow 1 minute clock skew
-      return false;
-    }
-
-    return true;
+    return await verifySignature(event);
   } catch (error) {
-    logger.error('Failed to verify event', { error });
+    logger.error('Error verifying event:', error);
     return false;
   }
 };

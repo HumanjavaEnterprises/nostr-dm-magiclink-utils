@@ -1,6 +1,6 @@
-import { nip19, validateEvent } from 'nostr-tools';
-import { NostrError, NostrErrorCode } from '../types/nostr.js';
+import { NostrError, NostrErrorCode } from '../types/errors.js';
 import { logger } from './logger.js';
+import { bech32 } from '@scure/base';
 
 /**
  * Validate a Nostr private key
@@ -25,22 +25,7 @@ export const validatePrivateKey = (key: string): boolean => {
 export const validatePublicKey = (key: string): boolean => {
   try {
     // Check if it's a valid hex string of correct length (64 characters = 32 bytes)
-    if (!/^[0-9a-f]{64}$/i.test(key)) {
-      return false;
-    }
-
-    // Create a dummy event to validate the public key
-    const dummyEvent = {
-      kind: 1,
-      created_at: Math.floor(Date.now() / 1000),
-      tags: [],
-      content: '',
-      pubkey: key,
-      id: '',
-      sig: ''
-    };
-
-    return validateEvent(dummyEvent);
+    return /^[0-9a-f]{64}$/i.test(key);
   } catch (error) {
     logger.error('Failed to validate public key', { error });
     return false;
@@ -56,17 +41,25 @@ export const formatPubkey = (pubkey: string): string => {
   try {
     if (!validatePublicKey(pubkey)) {
       throw new NostrError(
-        'Invalid public key',
-        NostrErrorCode.INVALID_KEY
+        'Invalid public key format',
+        NostrErrorCode.INVALID_PARAMETERS
       );
     }
-    return nip19.npubEncode(pubkey);
+
+    // Convert hex to bytes
+    const bytes = new Uint8Array(32);
+    for (let i = 0; i < 32; i++) {
+      bytes[i] = parseInt(pubkey.substring(i * 2, i * 2 + 2), 16);
+    }
+
+    // Encode as bech32 with npub prefix
+    return bech32.encode('npub', bech32.toWords(bytes));
   } catch (error) {
     logger.error('Failed to format public key', { error });
     throw new NostrError(
       'Failed to format public key',
-      NostrErrorCode.FORMATTING_ERROR,
-      { cause: error }
+      NostrErrorCode.INVALID_PARAMETERS,
+      error instanceof Error ? error : new Error(String(error))
     );
   }
 };
@@ -78,14 +71,23 @@ export const formatPubkey = (pubkey: string): string => {
  */
 export const isValidNpub = (npub: string): boolean => {
   try {
-    if (!npub.startsWith('npub1')) {
-      return false;
-    }
-    
-    const decoded = nip19.decode(npub);
-    return decoded.type === 'npub' && validatePublicKey(decoded.data);
-  } catch (error) {
-    logger.error('Failed to validate npub', { error });
+    if (!npub.startsWith('npub1')) return false;
+
+    // Decode bech32
+    const { prefix, words } = bech32.decode(npub as `${string}1${string}`);
+    if (prefix !== 'npub') return false;
+
+    // Convert words back to bytes
+    const bytes = bech32.fromWords(words);
+    if (bytes.length !== 32) return false;
+
+    // Convert bytes to hex
+    const hex = Array.from(bytes)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    return validatePublicKey(hex);
+  } catch {
     return false;
   }
 };
