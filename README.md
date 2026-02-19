@@ -38,14 +38,14 @@ Here's a complete example showing how to set up and use the magic link service:
 
 ```typescript
 import { createNostrMagicLink, NostrError } from 'nostr-dm-magiclink-utils';
-import { generatePrivateKey } from 'nostr-tools'; // For demo purposes
+import { generateKeyPair } from 'nostr-crypto-utils';
 
 async function setupAuthService() {
   // Create manager with secure configuration
   const magicLink = createNostrMagicLink({
     nostr: {
       // In production, load from secure environment variable
-      privateKey: process.env.NOSTR_PRIVATE_KEY || generatePrivateKey(),
+      privateKey: process.env.NOSTR_PRIVATE_KEY || generateKeyPair().privateKey,
       relayUrls: [
         'wss://relay.damus.io',
         'wss://relay.nostr.band',

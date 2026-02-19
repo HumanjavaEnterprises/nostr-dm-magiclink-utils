@@ -37,7 +37,8 @@
     }
   },
   "files": [
-    "dist/**/*"
+    "dist/**/*",
+    "examples/**/*"
   ],
   "dependencies": {
     "@noble/hashes": "^1.8.0",
