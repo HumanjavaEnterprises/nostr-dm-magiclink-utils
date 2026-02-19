@@ -6,7 +6,7 @@
     "node": true
   },
   "parser": "@typescript-eslint/parser",
-  "ignorePatterns": ["dist/**/*", "examples/**/*", "vitest.config.ts"],
+  "ignorePatterns": ["dist/**/*", "examples/**/*", "vitest.config.ts", "scripts/**/*"],
   "parserOptions": {
     "ecmaVersion": "latest",
     "sourceType": "module",
