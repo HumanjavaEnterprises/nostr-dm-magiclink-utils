@@ -12,7 +12,17 @@ export interface NostrConfig {
 export interface MagicLinkConfig {
   /** Base URL for magic link verification */
   verifyUrl: string;
-  /** JWT token or token generation function */
+  /**
+   * JWT signing secret used to sign and verify magic link tokens.
+   * This should be a strong, random secret kept server-side.
+   */
+  jwtSecret?: string;
+  /**
+   * @deprecated Use `jwtSecret` instead. If `jwtSecret` is not set, this value
+   * is used as the JWT signing secret for backwards compatibility. When `token`
+   * is a function, its return value is included as additional data in the JWT
+   * payload (not used as the signing secret).
+   */
   token: string | (() => Promise<string>);
   /** Default locale for messages */
   defaultLocale?: string;
