@@ -1,4 +1,5 @@
 import { getPublicKey, signEvent, verifySignature } from 'nostr-crypto-utils';
+import crypto from 'crypto';
 import { NostrError, NostrErrorCode } from '../../types/errors.js';
 import { NostrEvent, SignedNostrEvent } from '../../types/nostr.js';
 import { logger } from '../../utils/logger.js';
@@ -20,7 +21,7 @@ export const createEvent = async (
   try {
     const pubkey = await getPublicKey(privateKey);
     const created_at = Math.floor(Date.now() / 1000);
-    const nonce = Math.floor(Math.random() * 1000000);
+    const nonce = crypto.randomBytes(4).readUInt32BE(0) % 1000000;
 
     const event: NostrEvent = {
       pubkey,

@@ -66,8 +66,7 @@ export class MagicLinkManager implements MagicLinkServiceInterface {
       await this.nostrService.sendDirectMessage(recipientPubkey, message);
 
       return {
-        success: true,
-        magicLink: link
+        success: true
       };
     } catch (error) {
       const errorDetails: NostrError = new NostrError(
