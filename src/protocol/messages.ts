@@ -7,6 +7,8 @@ import { Logger } from 'pino';
 import { createLogger } from '../utils/logger.js';
 import { NostrError, NostrErrorCode } from '../types/errors.js';
 import { encryptMessage as nip04Encrypt } from '../nips/nip04.js';
+import { verifyEvent } from '../nips/nip01.js';
+import { SignedNostrEvent } from '../types/nostr.js';
 
 /**
  * Manages message encryption and verification for Nostr protocol
@@ -47,16 +49,53 @@ export class MessageManager {
     }
 
     /**
-     * Verify a received message
-     * @param senderPubkey Sender's public key
-     * @returns True if message is verified
+     * Verify a received message's signature and structure
+     * @param event Signed Nostr event to verify
+     * @returns True if message signature and structure are valid
      * @throws {NostrError} If verification fails
      */
-    async verifyMessage(senderPubkey: string): Promise<boolean> {
+    async verifyMessage(event: SignedNostrEvent): Promise<boolean> {
         try {
-            // Implementation for message verification
-            this.logger.info('Message verified from:', senderPubkey);
-            return true;
+            // Validate required fields exist
+            if (!event || typeof event !== 'object') {
+                this.logger.warn('Message verification failed: event is not an object');
+                return false;
+            }
+            if (!event.id || typeof event.id !== 'string') {
+                this.logger.warn('Message verification failed: missing or invalid event id');
+                return false;
+            }
+            if (!event.sig || typeof event.sig !== 'string') {
+                this.logger.warn('Message verification failed: missing or invalid event signature');
+                return false;
+            }
+            if (!event.pubkey || typeof event.pubkey !== 'string') {
+                this.logger.warn('Message verification failed: missing or invalid event pubkey');
+                return false;
+            }
+
+            // Validate key format (64 hex characters)
+            if (!/^[a-f0-9]{64}$/i.test(event.pubkey)) {
+                this.logger.warn('Message verification failed: pubkey is not valid 64-char hex');
+                return false;
+            }
+            if (!/^[a-f0-9]{64}$/i.test(event.id)) {
+                this.logger.warn('Message verification failed: id is not valid 64-char hex');
+                return false;
+            }
+            if (!/^[a-f0-9]{128}$/i.test(event.sig)) {
+                this.logger.warn('Message verification failed: sig is not valid 128-char hex');
+                return false;
+            }
+
+            // Verify the event signature using NIP-01 Schnorr verification
+            const isValid = await verifyEvent(event);
+            if (isValid) {
+                this.logger.info('Message verified from: %s', event.pubkey);
+            } else {
+                this.logger.warn('Message signature verification failed for pubkey: %s', event.pubkey);
+            }
+            return isValid;
         } catch (error) {
             throw new NostrError(
                 'Failed to verify message',

@@ -26,14 +26,12 @@ export async function encryptMessage(
       throw new Error('Public key is required');
     }
 
-    // In production, validate key formats
-    if (process.env.NODE_ENV === 'production') {
-      if (privateKey.length !== 64) {
-        throw new Error('Invalid private key format');
-      }
-      if (publicKey.length !== 64) {
-        throw new Error('Invalid public key format');
-      }
+    // Validate key formats
+    if (!privateKey || typeof privateKey !== 'string' || !/^[a-f0-9]{64}$/i.test(privateKey)) {
+      throw new Error('Invalid key format: must be 64 hex characters');
+    }
+    if (!publicKey || typeof publicKey !== 'string' || !/^[a-f0-9]{64}$/i.test(publicKey)) {
+      throw new Error('Invalid key format: must be 64 hex characters');
     }
 
     // Handle empty messages
@@ -77,14 +75,12 @@ export async function decryptMessage(
       throw new Error('Public key is required');
     }
 
-    // In production, validate key formats
-    if (process.env.NODE_ENV === 'production') {
-      if (privateKey.length !== 64) {
-        throw new Error('Invalid private key format');
-      }
-      if (publicKey.length !== 64) {
-        throw new Error('Invalid public key format');
-      }
+    // Validate key formats
+    if (!privateKey || typeof privateKey !== 'string' || !/^[a-f0-9]{64}$/i.test(privateKey)) {
+      throw new Error('Invalid key format: must be 64 hex characters');
+    }
+    if (!publicKey || typeof publicKey !== 'string' || !/^[a-f0-9]{64}$/i.test(publicKey)) {
+      throw new Error('Invalid key format: must be 64 hex characters');
     }
 
     // Note: decryptMessage expects (encryptedMessage, senderPubkey, recipientPrivkey)
