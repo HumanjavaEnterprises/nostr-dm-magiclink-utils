@@ -12,6 +12,18 @@ vi.mock('nostr-crypto-utils', () => ({
   })
 }));
 
+/**
+ * Helper: extract the token from the mock sendDirectMessage call.
+ * The magic link is sent via DM (not returned in the response),
+ * so we parse it from the message argument.
+ */
+function extractTokenFromMock(mockNostrService: { sendDirectMessage: ReturnType<typeof vi.fn> }): string {
+  const message: string = mockNostrService.sendDirectMessage.mock.calls[0][1];
+  const urlMatch = message.match(/https?:\/\/\S+/);
+  if (!urlMatch) throw new Error('No URL found in DM message');
+  return new URL(urlMatch[0]).searchParams.get('token')!;
+}
+
 describe('MagicLinkManager', () => {
   const JWT_SECRET = 'test-jwt-secret-at-least-32-chars-long!!';
 
@@ -28,7 +40,7 @@ describe('MagicLinkManager', () => {
     };
 
     const service = new MagicLinkManager(mockNostrService, config);
-    return { service, mockNostrService };
+    return { service, mockNostrService: mockNostrService as unknown as { sendDirectMessage: ReturnType<typeof vi.fn> } };
   }
 
   it('should send magic link successfully', async () => {
@@ -42,7 +54,8 @@ describe('MagicLinkManager', () => {
     });
 
     expect(result.success).toBe(true);
-    expect(result.magicLink).toContain('https://example.com/verify');
+    // magicLink is intentionally NOT returned in the response (security)
+    // Verify the DM was sent with the link
     expect(mockNostrService.sendDirectMessage).toHaveBeenCalledWith(
       'test-public-key',
       expect.stringContaining('https://example.com/verify')
@@ -50,29 +63,25 @@ describe('MagicLinkManager', () => {
   });
 
   it('should generate unique JWT tokens per request', async () => {
-    const { service } = createService();
+    const { service, mockNostrService } = createService();
 
-    const result1 = await service.sendMagicLink({
-      recipientPubkey: 'test-public-key',
-    });
-    const result2 = await service.sendMagicLink({
-      recipientPubkey: 'test-public-key',
-    });
+    await service.sendMagicLink({ recipientPubkey: 'test-public-key' });
+    const token1 = extractTokenFromMock(mockNostrService);
+
+    mockNostrService.sendDirectMessage.mockClear();
+    await service.sendMagicLink({ recipientPubkey: 'test-public-key' });
+    const token2 = extractTokenFromMock(mockNostrService);
 
     // Tokens must be different (unique jti per request)
-    const token1 = new URL(result1.magicLink!).searchParams.get('token');
-    const token2 = new URL(result2.magicLink!).searchParams.get('token');
     expect(token1).not.toBe(token2);
   });
 
   it('should embed pubkey in JWT payload', async () => {
-    const { service } = createService();
+    const { service, mockNostrService } = createService();
 
-    const result = await service.sendMagicLink({
-      recipientPubkey: 'test-public-key',
-    });
+    await service.sendMagicLink({ recipientPubkey: 'test-public-key' });
+    const token = extractTokenFromMock(mockNostrService);
 
-    const token = new URL(result.magicLink!).searchParams.get('token')!;
     const decoded = jwt.verify(token, JWT_SECRET) as { pubkey: string; jti: string };
     expect(decoded.pubkey).toBe('test-public-key');
     expect(decoded.jti).toBeDefined();
@@ -81,25 +90,20 @@ describe('MagicLinkManager', () => {
   });
 
   it('should verify a valid magic link token', async () => {
-    const { service } = createService();
+    const { service, mockNostrService } = createService();
 
-    const result = await service.sendMagicLink({
-      recipientPubkey: 'test-public-key',
-    });
+    await service.sendMagicLink({ recipientPubkey: 'test-public-key' });
+    const token = extractTokenFromMock(mockNostrService);
 
-    const token = new URL(result.magicLink!).searchParams.get('token')!;
     const pubkey = await service.verifyMagicLink(token);
     expect(pubkey).toBe('test-public-key');
   });
 
   it('should reject a token that has already been used (single-use enforcement)', async () => {
-    const { service } = createService();
+    const { service, mockNostrService } = createService();
 
-    const result = await service.sendMagicLink({
-      recipientPubkey: 'test-public-key',
-    });
-
-    const token = new URL(result.magicLink!).searchParams.get('token')!;
+    await service.sendMagicLink({ recipientPubkey: 'test-public-key' });
+    const token = extractTokenFromMock(mockNostrService);
 
     // First use should succeed
     const pubkey = await service.verifyMagicLink(token);
@@ -120,38 +124,37 @@ describe('MagicLinkManager', () => {
 
   it('should fall back to config.token as JWT secret when jwtSecret is not set', async () => {
     const fallbackSecret = 'my-fallback-secret-string';
-    const { service } = createService({
+    const { service, mockNostrService } = createService({
       jwtSecret: undefined,
       token: fallbackSecret,
     });
 
-    const result = await service.sendMagicLink({
-      recipientPubkey: 'test-public-key',
-    });
-
-    const token = new URL(result.magicLink!).searchParams.get('token')!;
+    await service.sendMagicLink({ recipientPubkey: 'test-public-key' });
+    const token = extractTokenFromMock(mockNostrService);
 
     // Should be verifiable with the fallback secret
     const decoded = jwt.verify(token, fallbackSecret) as { pubkey: string };
     expect(decoded.pubkey).toBe('test-public-key');
 
     // And should be verifiable through the service
-    const pubkey = await service.verifyMagicLink(token);
+    // Need a fresh token since the first was consumed by jwt.verify above
+    mockNostrService.sendDirectMessage.mockClear();
+    await service.sendMagicLink({ recipientPubkey: 'test-public-key' });
+    const token2 = extractTokenFromMock(mockNostrService);
+    const pubkey = await service.verifyMagicLink(token2);
     expect(pubkey).toBe('test-public-key');
   });
 
   it('should include tokenData in JWT when config.token is a function', async () => {
     const jwtSecret = 'explicit-jwt-secret-for-function-test';
-    const { service } = createService({
+    const { service, mockNostrService } = createService({
       jwtSecret,
       token: vi.fn().mockResolvedValue('dynamic-data-value') as unknown as (() => Promise<string>),
     });
 
-    const result = await service.sendMagicLink({
-      recipientPubkey: 'test-public-key',
-    });
+    await service.sendMagicLink({ recipientPubkey: 'test-public-key' });
+    const token = extractTokenFromMock(mockNostrService);
 
-    const token = new URL(result.magicLink!).searchParams.get('token')!;
     const decoded = jwt.verify(token, jwtSecret) as { pubkey: string; tokenData: string };
     expect(decoded.pubkey).toBe('test-public-key');
     expect(decoded.tokenData).toBe('dynamic-data-value');

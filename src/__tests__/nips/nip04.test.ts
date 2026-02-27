@@ -44,7 +44,7 @@ describe('NIP-04: Encrypted Direct Messages', () => {
         .rejects.toThrow('Message cannot be empty');
         
       await expect(encryptMessage('test', 'invalid-key', recipientPublicKey))
-        .rejects.toThrow('Keys must be 32-byte hex strings');
+        .rejects.toThrow('Invalid key format: must be 64 hex characters');
     });
   });
 });
