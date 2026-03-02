@@ -3,7 +3,7 @@
  * @description Implementation of NIP-01 functionality for direct messages
  */
 
-import { getPublicKey, signEvent as cryptoSignEvent, verifySignature as cryptoVerifySignature } from 'nostr-crypto-utils';
+import { getPublicKeySync, finalizeEvent, verifySignature as cryptoVerifySignature } from 'nostr-crypto-utils';
 import { NostrError, NostrErrorCode } from '../types/errors.js';
 import { NostrEvent, SignedNostrEvent, EventParams, SignEventParams } from '../types/nostr.js';
 import { sha256 } from '@noble/hashes/sha256';
@@ -15,14 +15,14 @@ import { bytesToHex } from '@noble/hashes/utils';
  * @returns Created event
  */
 export function createEvent(params: EventParams): NostrEvent {
-  const { 
-    kind, 
-    content, 
-    tags = [], 
-    created_at = Math.floor(Date.now() / 1000), 
-    pubkey = '' 
+  const {
+    kind,
+    content,
+    tags = [],
+    created_at = Math.floor(Date.now() / 1000),
+    pubkey = ''
   } = params;
-  
+
   return {
     kind,
     content,
@@ -61,35 +61,40 @@ export function calculateEventHash(event: NostrEvent): string {
 
 /**
  * Creates and signs a Nostr event (NIP-01)
+ * Uses finalizeEvent from nostr-crypto-utils for one-step create+sign.
  * @param params - Event parameters including private key
  * @returns Signed event
  */
 export async function signedEvent(params: SignEventParams): Promise<SignedNostrEvent> {
   try {
     const { privateKey, ...eventParams } = params;
-    
-    // Get public key if not provided
-    const pubkey = eventParams.pubkey || await getPublicKey(privateKey);
-    
-    // Create the base event
-    const event = createEvent({ ...eventParams, pubkey });
-    
-    // Calculate event hash/id
-    const id = calculateEventHash(event);
-    
-    // Sign the event and get signature
-    const signature = await cryptoSignEvent(event, privateKey);
-    if (typeof signature !== 'string') {
-      throw new Error('Invalid signature format');
-    }
 
-    // Return the signed event
+    // Derive pubkey synchronously if not provided
+    const pubkey = eventParams.pubkey || getPublicKeySync(privateKey);
+
+    // Use finalizeEvent for one-step create + hash + sign
+    const signed = await finalizeEvent(
+      {
+        kind: eventParams.kind,
+        content: eventParams.content,
+        tags: eventParams.tags || [],
+        created_at: eventParams.created_at,
+        pubkey,
+      },
+      privateKey
+    );
+
+    // Map the result to our SignedNostrEvent shape
     return {
-      ...event,
-      id,
-      sig: signature
+      pubkey: signed.pubkey as string,
+      created_at: signed.created_at,
+      kind: signed.kind,
+      tags: signed.tags as string[][],
+      content: signed.content,
+      id: signed.id,
+      sig: signed.sig,
     };
-  } catch (error) {
+  } catch (_error) {
     throw new NostrError(
       'Failed to create signed event',
       NostrErrorCode.EVENT_CREATION_FAILED
@@ -105,7 +110,7 @@ export async function signedEvent(params: SignEventParams): Promise<SignedNostrE
 export async function verifyEvent(event: SignedNostrEvent): Promise<boolean> {
   try {
     return await cryptoVerifySignature(event);
-  } catch (error) {
+  } catch (_error) {
     throw new NostrError(
       'Failed to verify event',
       NostrErrorCode.EVENT_VERIFICATION_FAILED

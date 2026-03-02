@@ -9,7 +9,15 @@ vi.mock('nostr-crypto-utils', () => ({
   generateKeyPair: vi.fn().mockResolvedValue({
     publicKey: 'test-public-key',
     privateKey: 'test-private-key'
-  })
+  }),
+  getPublicKeySync: vi.fn().mockReturnValue('test-public-key'),
+  finalizeEvent: vi.fn().mockResolvedValue({ id: 'mock_id', sig: 'mock_sig' }),
+  hexToBytes: vi.fn().mockImplementation((hex: string) => new Uint8Array(hex.length / 2)),
+  nip44: {
+    getConversationKey: vi.fn().mockReturnValue(new Uint8Array(32)),
+    encrypt: vi.fn().mockReturnValue('nip44_encrypted'),
+    decrypt: vi.fn().mockReturnValue('nip44_decrypted'),
+  },
 }));
 
 /**

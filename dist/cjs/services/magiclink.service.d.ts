@@ -9,6 +9,12 @@ export declare class MagicLinkManager implements MagicLinkServiceInterface {
     private readonly nostrService;
     private readonly config;
     private readonly logger;
+    /**
+     * Tracks consumed token JTIs to prevent replay attacks.
+     * Maps jti -> expiry timestamp (seconds since epoch).
+     * Expired entries are periodically cleaned up during verification.
+     */
+    private readonly consumedTokens;
     private readonly defaultTemplate;
     /**
      * Creates a new instance of MagicLinkManager
@@ -32,11 +38,24 @@ export declare class MagicLinkManager implements MagicLinkServiceInterface {
      */
     verifyMagicLink(token: string): Promise<string | null>;
     /**
-     * Generates a token for magic link authentication
-     * @returns Promise resolving to the generated token
+     * Returns the JWT signing secret.
+     * Prefers config.jwtSecret; falls back to config.token (string) for backwards compatibility.
+     * @returns The JWT signing secret string
+     */
+    private getJwtSecret;
+    /**
+     * Generates a per-request JWT token for magic link authentication.
+     * Each token contains the recipient's pubkey, a unique jti, and a 15-minute expiration.
+     * @param pubkey - The recipient's public key to embed in the token
+     * @returns Promise resolving to the generated JWT token string
      * @throws {NostrError} If token generation fails
      */
     private generateToken;
+    /**
+     * Removes expired entries from the consumed tokens map.
+     * Called during verification to prevent unbounded memory growth.
+     */
+    private cleanupConsumedTokens;
     /**
      * Formats a message with the given template and variables
      * @param link - The magic link URL

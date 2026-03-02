@@ -21,7 +21,29 @@ vi.mock('nostr-crypto-utils', () => ({
   generateKeyPair: vi.fn().mockResolvedValue({
     publicKey: 'pub_test-private-key',
     privateKey: 'test-private-key'
-  })
+  }),
+  getPublicKeySync: vi.fn().mockImplementation((privateKey: string) => `pub_${privateKey}`),
+  finalizeEvent: vi.fn().mockImplementation((event: Record<string, unknown>) => ({
+    id: 'test-event-id',
+    pubkey: event.pubkey || 'test-pubkey',
+    created_at: (event.created_at as number) || Math.floor(Date.now() / 1000),
+    kind: (event.kind as number) || 4,
+    tags: event.tags || [],
+    content: (event.content as string) || '',
+    sig: 'test-signature',
+  })),
+  hexToBytes: vi.fn().mockImplementation((hex: string) => {
+    const bytes = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < hex.length; i += 2) {
+      bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+    }
+    return bytes;
+  }),
+  nip44: {
+    getConversationKey: vi.fn().mockReturnValue(new Uint8Array(32)),
+    encrypt: vi.fn().mockImplementation((plaintext: string) => `nip44_encrypted_${plaintext}`),
+    decrypt: vi.fn().mockImplementation(() => 'nip44_decrypted_message'),
+  },
 }));
 
 // Mock NIP-01 functions

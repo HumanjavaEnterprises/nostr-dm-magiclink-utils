@@ -1,6 +1,7 @@
 import { SignedNostrEvent } from '../../types/nostr.js';
 /**
  * Create a signed Nostr event
+ * Uses finalizeEvent for one-step create+sign and getPublicKeySync for sync pubkey derivation.
  * @param content Event content
  * @param kind Event kind
  * @param privateKey Private key to sign the event

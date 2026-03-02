@@ -6,7 +6,9 @@ vi.mock('nostr-crypto-utils', () => ({
   generateKeyPair: vi.fn().mockResolvedValue({
     publicKey: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
     privateKey: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
-  })
+  }),
+  getPublicKeySync: vi.fn().mockReturnValue('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'),
+  hexToBytes: vi.fn().mockImplementation((hex: string) => new Uint8Array(hex.length / 2)),
 }));
 
 describe('Key Utils', () => {

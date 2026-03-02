@@ -14,7 +14,7 @@ vi.mock('nostr-crypto-utils', () => ({
     }
     return Promise.resolve('encrypted_message');
   }),
-  decrypt: vi.fn().mockImplementation((encryptedMessage: string, privateKey: string, publicKey: string) => {
+  decrypt: vi.fn().mockImplementation((_encryptedMessage: string, privateKey: string, publicKey: string) => {
     if (!privateKey || !publicKey) {
       throw new Error('Invalid parameters');
     }
@@ -22,7 +22,19 @@ vi.mock('nostr-crypto-utils', () => ({
       throw new Error('Keys must be 32-byte hex strings');
     }
     return Promise.resolve('decrypted_message');
-  })
+  }),
+  hexToBytes: vi.fn().mockImplementation((hex: string) => {
+    const bytes = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < hex.length; i += 2) {
+      bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+    }
+    return bytes;
+  }),
+  nip44: {
+    getConversationKey: vi.fn().mockReturnValue(new Uint8Array(32)),
+    encrypt: vi.fn().mockImplementation((plaintext: string) => `nip44_encrypted_${plaintext}`),
+    decrypt: vi.fn().mockImplementation(() => 'nip44_decrypted_message'),
+  },
 }));
 
 describe('NIP-04: Encrypted Direct Messages', () => {

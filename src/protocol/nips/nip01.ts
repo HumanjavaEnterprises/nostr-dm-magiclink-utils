@@ -1,11 +1,12 @@
-import { getPublicKey, signEvent, verifySignature } from 'nostr-crypto-utils';
+import { getPublicKeySync, finalizeEvent, verifySignature } from 'nostr-crypto-utils';
 import crypto from 'crypto';
 import { NostrError, NostrErrorCode } from '../../types/errors.js';
-import { NostrEvent, SignedNostrEvent } from '../../types/nostr.js';
+import { SignedNostrEvent } from '../../types/nostr.js';
 import { logger } from '../../utils/logger.js';
 
 /**
  * Create a signed Nostr event
+ * Uses finalizeEvent for one-step create+sign and getPublicKeySync for sync pubkey derivation.
  * @param content Event content
  * @param kind Event kind
  * @param privateKey Private key to sign the event
@@ -19,23 +20,29 @@ export const createEvent = async (
   tags: string[][] = []
 ): Promise<SignedNostrEvent> => {
   try {
-    const pubkey = await getPublicKey(privateKey);
-    const created_at = Math.floor(Date.now() / 1000);
+    const pubkey = getPublicKeySync(privateKey);
     const nonce = crypto.randomBytes(4).readUInt32BE(0) % 1000000;
 
-    const event: NostrEvent = {
-      pubkey,
-      created_at,
-      kind,
-      tags,
-      content: `${content}:${nonce}`,
+    // Use finalizeEvent for one-step create + hash + sign
+    const signed = await finalizeEvent(
+      {
+        pubkey,
+        kind,
+        tags,
+        content: `${content}:${nonce}`,
+      },
+      privateKey
+    );
+
+    return {
+      pubkey: signed.pubkey as string,
+      created_at: signed.created_at,
+      kind: signed.kind,
+      tags: signed.tags as string[][],
+      content: signed.content,
+      id: signed.id,
+      sig: signed.sig,
     };
-
-    // Sign the event
-    const signedEventStr = await signEvent(event, privateKey);
-    const signedEvent = JSON.parse(signedEventStr) as SignedNostrEvent;
-    return signedEvent;
-
   } catch (error) {
     logger.error('Error creating event:', error);
     throw new NostrError(

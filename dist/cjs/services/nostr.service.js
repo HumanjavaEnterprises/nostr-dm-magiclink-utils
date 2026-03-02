@@ -2,6 +2,7 @@ import { encrypt } from 'nostr-crypto-utils';
 import { NostrWSClient } from 'nostr-websocket-utils';
 import { NostrError, NostrErrorCode } from '../types/errors.js';
 import { signedEvent } from '../nips/nip01.js';
+import { encryptNip44 } from '../nips/nip44.js';
 import { createLogger } from '../utils/logger.js';
 /**
  * Implementation of the Nostr service for handling direct messages
@@ -139,13 +140,17 @@ export class NostrService {
             if (!this.isConnected) {
                 await this.connect();
             }
-            // Encrypt the message
-            const encryptedContent = await encrypt(content, this.config.privateKey, pubkey);
+            // Encrypt the message using the configured encryption mode
+            const useNip44 = this.config.encryptionMode === 'nip44';
+            const encryptedContent = useNip44
+                ? await encryptNip44(content, this.config.privateKey, pubkey)
+                : await encrypt(content, this.config.privateKey, pubkey);
             // Create and sign the Nostr event
+            // NIP-04 uses kind 4; NIP-44 uses kind 44
             const eventParams = {
                 privateKey: this.config.privateKey,
                 content: encryptedContent,
-                kind: 4, // Direct Message
+                kind: useNip44 ? 44 : 4,
                 tags: [['p', pubkey]]
             };
             const event = await signedEvent(eventParams);

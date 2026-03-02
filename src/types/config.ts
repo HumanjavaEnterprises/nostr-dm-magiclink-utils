@@ -2,11 +2,25 @@
  * Configuration types for the nostr-dm-magiclink-utils package
  */
 
+/**
+ * Encryption mode for direct messages.
+ * - 'nip04': Legacy AES-CBC encryption (NIP-04, default for backward compatibility)
+ * - 'nip44': Modern ChaCha20 + HMAC encryption (NIP-44, recommended)
+ */
+export type EncryptionMode = 'nip04' | 'nip44';
+
 export interface NostrConfig {
   /** Nostr private key in hex format (nsec) */
   privateKey: string;
   /** List of relay URLs to connect to */
   relayUrls: string[];
+  /**
+   * Encryption mode for direct messages.
+   * - 'nip04': Legacy AES-CBC encryption (default)
+   * - 'nip44': Modern ChaCha20 + HMAC encryption (recommended)
+   * @default 'nip04'
+   */
+  encryptionMode?: EncryptionMode;
 }
 
 export interface MagicLinkConfig {
@@ -75,4 +89,11 @@ export interface NostrServiceConfig {
   relayUrls: string[];
   retryAttempts?: number;
   retryDelay?: number;
+  /**
+   * Encryption mode for direct messages.
+   * - 'nip04': Legacy AES-CBC encryption (default)
+   * - 'nip44': Modern ChaCha20 + HMAC encryption (recommended)
+   * @default 'nip04'
+   */
+  encryptionMode?: EncryptionMode;
 }

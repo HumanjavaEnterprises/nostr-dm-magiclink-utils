@@ -4,7 +4,15 @@ import { encrypt as encryptMessage } from 'nostr-crypto-utils';
 // Mock the crypto utils module
 vi.mock('nostr-crypto-utils', () => ({
   encrypt: vi.fn().mockResolvedValue('encrypted_message'),
-  decrypt: vi.fn().mockResolvedValue('decrypted_message')
+  decrypt: vi.fn().mockResolvedValue('decrypted_message'),
+  getPublicKeySync: vi.fn().mockReturnValue('mock_pubkey'),
+  finalizeEvent: vi.fn().mockResolvedValue({ id: 'mock_id', sig: 'mock_sig' }),
+  hexToBytes: vi.fn().mockImplementation((hex: string) => new Uint8Array(hex.length / 2)),
+  nip44: {
+    getConversationKey: vi.fn().mockReturnValue(new Uint8Array(32)),
+    encrypt: vi.fn().mockReturnValue('nip44_encrypted'),
+    decrypt: vi.fn().mockReturnValue('nip44_decrypted'),
+  },
 }));
 
 describe('nostr-crypto-utils', () => {
@@ -13,7 +21,7 @@ describe('nostr-crypto-utils', () => {
     // Use proper 32-byte hex strings
     const privateKey = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
     const publicKey = 'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210';
-    
+
     const encrypted = await encryptMessage(message, privateKey, publicKey);
     expect(encrypted).toBe('encrypted_message');
   });

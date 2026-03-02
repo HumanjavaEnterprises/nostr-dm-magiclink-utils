@@ -23,6 +23,7 @@ export declare function serializeEvent(event: NostrEvent): string;
 export declare function calculateEventHash(event: NostrEvent): string;
 /**
  * Creates and signs a Nostr event (NIP-01)
+ * Uses finalizeEvent from nostr-crypto-utils for one-step create+sign.
  * @param params - Event parameters including private key
  * @returns Signed event
  */

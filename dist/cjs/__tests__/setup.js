@@ -24,7 +24,30 @@ vi.mock('nostr-crypto-utils', () => ({
     encrypt: vi.fn().mockResolvedValue('encrypted-content'),
     decrypt: vi.fn().mockResolvedValue('decrypted-message'),
     getEventHash: vi.fn().mockReturnValue('test-hash'),
-    signEvent: vi.fn().mockReturnValue('test-signature')
+    signEvent: vi.fn().mockReturnValue('test-signature'),
+    getPublicKey: vi.fn().mockResolvedValue({ hex: 'test-public-key', bytes: new Uint8Array(32) }),
+    getPublicKeySync: vi.fn().mockReturnValue('test-public-key'),
+    finalizeEvent: vi.fn().mockImplementation((event) => ({
+        id: 'test-event-id',
+        pubkey: event.pubkey || 'test-public-key',
+        created_at: event.created_at || Math.floor(Date.now() / 1000),
+        kind: event.kind || 1,
+        tags: event.tags || [],
+        content: event.content || '',
+        sig: 'test-signature',
+    })),
+    hexToBytes: vi.fn().mockImplementation((hex) => {
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < hex.length; i += 2) {
+            bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+        }
+        return bytes;
+    }),
+    nip44: {
+        getConversationKey: vi.fn().mockReturnValue(new Uint8Array(32)),
+        encrypt: vi.fn().mockImplementation((plaintext) => `nip44_encrypted_${plaintext}`),
+        decrypt: vi.fn().mockImplementation(() => 'nip44_decrypted_message'),
+    },
 }));
 // Mock pino logger
 vi.mock('pino', () => {
