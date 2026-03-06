@@ -8,12 +8,13 @@ const mockConnect = vi.fn().mockResolvedValue(undefined);
 const mockDisconnect = vi.fn().mockResolvedValue(undefined);
 const mockSendMessage = vi.fn().mockResolvedValue(undefined);
 
+// vitest 4: `new` on a vi.fn() constructs an instance, so use a class
 vi.mock('nostr-websocket-utils', () => ({
-  NostrWSClient: vi.fn().mockImplementation(() => ({
-    connect: mockConnect,
-    disconnect: mockDisconnect,
-    sendMessage: mockSendMessage
-  }))
+  NostrWSClient: class {
+    connect = mockConnect;
+    disconnect = mockDisconnect;
+    sendMessage = mockSendMessage;
+  }
 }));
 
 vi.mock('nostr-crypto-utils', () => ({

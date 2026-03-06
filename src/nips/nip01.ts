@@ -6,8 +6,8 @@
 import { getPublicKeySync, finalizeEvent, verifySignature as cryptoVerifySignature } from 'nostr-crypto-utils';
 import { NostrError, NostrErrorCode } from '../types/errors.js';
 import { NostrEvent, SignedNostrEvent, EventParams, SignEventParams } from '../types/nostr.js';
-import { sha256 } from '@noble/hashes/sha256';
-import { bytesToHex } from '@noble/hashes/utils';
+import { sha256 } from '@noble/hashes/sha2.js';
+import { bytesToHex } from '@noble/hashes/utils.js';
 
 /**
  * Creates a new Nostr event with the specified parameters (NIP-01)

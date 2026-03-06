@@ -44,7 +44,7 @@ export const createEvent = async (
       sig: signed.sig,
     };
   } catch (error) {
-    logger.error('Error creating event:', error);
+    logger.error({ error }, 'Error creating event');
     throw new NostrError(
       'Failed to create event',
       NostrErrorCode.EVENT_CREATION_FAILED,
@@ -76,7 +76,7 @@ export const verifyEvent = async (event: SignedNostrEvent): Promise<boolean> => 
     // Verify signature
     return await verifySignature(event);
   } catch (error) {
-    logger.error('Error verifying event:', error);
+    logger.error({ error }, 'Error verifying event');
     return false;
   }
 };

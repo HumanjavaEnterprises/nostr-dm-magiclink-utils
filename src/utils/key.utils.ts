@@ -12,7 +12,7 @@ export const validatePrivateKey = (key: string): boolean => {
     // Check if it's a valid hex string of correct length (64 characters = 32 bytes)
     return /^[0-9a-f]{64}$/i.test(key);
   } catch (error) {
-    logger.error('Failed to validate private key', { error });
+    logger.error({ error }, 'Failed to validate private key');
     return false;
   }
 };
@@ -27,7 +27,7 @@ export const validatePublicKey = (key: string): boolean => {
     // Check if it's a valid hex string of correct length (64 characters = 32 bytes)
     return /^[0-9a-f]{64}$/i.test(key);
   } catch (error) {
-    logger.error('Failed to validate public key', { error });
+    logger.error({ error }, 'Failed to validate public key');
     return false;
   }
 };
@@ -55,7 +55,7 @@ export const formatPubkey = (pubkey: string): string => {
     // Encode as bech32 with npub prefix
     return bech32.encode('npub', bech32.toWords(bytes));
   } catch (error) {
-    logger.error('Failed to format public key', { error });
+    logger.error({ error }, 'Failed to format public key');
     throw new NostrError(
       'Failed to format public key',
       NostrErrorCode.INVALID_PARAMETERS,
