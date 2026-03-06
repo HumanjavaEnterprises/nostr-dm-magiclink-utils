@@ -47,9 +47,9 @@
     "@types/jsonwebtoken": "^9.0.10",
     "dotenv": "^16.6.1",
     "jsonwebtoken": "^9.0.3",
-    "nostr-crypto-utils": "file:../nostr-crypto-utils",
-    "nostr-nsec-seedphrase": "file:../nostr-nsec-seedphrase",
-    "nostr-websocket-utils": "file:../nostr-websocket-utils",
+    "nostr-crypto-utils": "^0.6.0",
+    "nostr-nsec-seedphrase": "^0.7.0",
+    "nostr-websocket-utils": "^0.4.0",
     "pino": "^10.3.1"
   },
   "devDependencies": {
