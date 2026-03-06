@@ -33,7 +33,7 @@ export const createEvent = async (content, kind, privateKey, tags = []) => {
         };
     }
     catch (error) {
-        logger.error('Error creating event:', error);
+        logger.error({ error }, 'Error creating event');
         throw new NostrError('Failed to create event', NostrErrorCode.EVENT_CREATION_FAILED, error instanceof Error ? error : new Error(String(error)));
     }
 };
@@ -58,7 +58,7 @@ export const verifyEvent = async (event) => {
         return await verifySignature(event);
     }
     catch (error) {
-        logger.error('Error verifying event:', error);
+        logger.error({ error }, 'Error verifying event');
         return false;
     }
 };
