@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-03-06
+
+### Changed
+- **Noble 2.0 migration:** `@noble/curves` ^2.0.1, `@noble/hashes` ^2.0.1
+- **Pino 10:** Upgraded logger from pino 8.x
+- **Vitest 4:** Upgraded test framework
+- **nostr-crypto-utils** and **nostr-websocket-utils** dependencies upgraded to published ^0.6.0 versions
+- Dropped Node.js 16 support
+
+### Added
+- NIP-44 encryption support via nostr-crypto-utils v0.5.1
+
+### Fixed
+- Removed magic link URL from API response — uses crypto nonces instead
+- Enforced key validation in all environments; implemented message verification
+- Redesigned magic link token architecture for security
+- Updated tests for key validation error messages
+- Resolved npm audit vulnerabilities (ajv, minimatch, rollup)
+
+### Security
+- Eliminated elliptic HIGH vulnerability by updating nostr-crypto-utils
+
 ## [0.2.1] - 2025-02-19
 
 ### Changed
