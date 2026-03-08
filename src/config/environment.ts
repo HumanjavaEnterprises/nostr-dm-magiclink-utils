@@ -38,7 +38,7 @@ const validateUrl = (url: string): boolean => {
 };
 
 export const loadEnvironment = async (): Promise<void> => {
-  dotenv.config();
+  dotenv.config({ quiet: true });
   
   const nodeEnv = getEnvVar('NODE_ENV', 'development', false);
   const isProduction = nodeEnv === 'production';

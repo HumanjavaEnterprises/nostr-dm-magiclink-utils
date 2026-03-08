@@ -18,7 +18,7 @@ const validateUrl = (url) => {
     }
 };
 export const loadEnvironment = async () => {
-    dotenv.config();
+    dotenv.config({ quiet: true });
     const nodeEnv = getEnvVar('NODE_ENV', 'development', false);
     const isProduction = nodeEnv === 'production';
     // Support both comma-separated RELAY_URLS and single RELAY_URL for backward compatibility
