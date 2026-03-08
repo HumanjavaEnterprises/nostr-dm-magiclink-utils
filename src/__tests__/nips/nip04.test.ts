@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { encryptMessage, decryptMessage } from '../../nips/nip04.js';
+import { encryptMessage } from '../../nips/nip04.js';
 
 vi.mock('nostr-crypto-utils', () => ({
   encrypt: vi.fn().mockImplementation((message: string, privateKey: string, publicKey: string) => {
