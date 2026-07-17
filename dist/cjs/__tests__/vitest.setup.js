@@ -1,22 +1,24 @@
-import { vi } from 'vitest';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const vitest_1 = require("vitest");
 // Mock crypto-related functions
-vi.mock('nostr-crypto-utils', () => ({
-    getPublicKey: vi.fn().mockImplementation((privateKey) => {
+vitest_1.vi.mock('nostr-crypto-utils', () => ({
+    getPublicKey: vitest_1.vi.fn().mockImplementation((privateKey) => {
         // Return a deterministic public key based on private key
         return { hex: `pub_${privateKey}`, bytes: new Uint8Array(32) };
     }),
-    getPublicKeySync: vi.fn().mockImplementation((privateKey) => {
+    getPublicKeySync: vitest_1.vi.fn().mockImplementation((privateKey) => {
         // Return a deterministic public key based on private key
         return `pub_${privateKey}`;
     }),
-    signEvent: vi.fn().mockImplementation((_event, _privateKey) => {
+    signEvent: vitest_1.vi.fn().mockImplementation((_event, _privateKey) => {
         // Return a mock signed event
         return {
             id: 'mock_event_id',
             sig: 'mock_signature',
         };
     }),
-    finalizeEvent: vi.fn().mockImplementation((event, _privateKey) => {
+    finalizeEvent: vitest_1.vi.fn().mockImplementation((event, _privateKey) => {
         return {
             id: 'mock_event_id',
             pubkey: event.pubkey || 'mock_pubkey',
@@ -27,53 +29,53 @@ vi.mock('nostr-crypto-utils', () => ({
             sig: 'mock_signature',
         };
     }),
-    verifySignature: vi.fn().mockImplementation(() => {
+    verifySignature: vitest_1.vi.fn().mockImplementation(() => {
         // Always return true for tests
         return true;
     }),
-    encrypt: vi.fn().mockImplementation((message) => {
+    encrypt: vitest_1.vi.fn().mockImplementation((message) => {
         // Return a mock encrypted message
         return `encrypted_${message}`;
     }),
-    decrypt: vi.fn().mockImplementation((_encrypted) => {
+    decrypt: vitest_1.vi.fn().mockImplementation((_encrypted) => {
         return 'decrypted_message';
     }),
-    encryptMessage: vi.fn().mockImplementation((message) => {
+    encryptMessage: vitest_1.vi.fn().mockImplementation((message) => {
         // Return a mock encrypted message
         return `encrypted_${message}`;
     }),
-    hexToBytes: vi.fn().mockImplementation((hex) => {
+    hexToBytes: vitest_1.vi.fn().mockImplementation((hex) => {
         const bytes = new Uint8Array(hex.length / 2);
         for (let i = 0; i < hex.length; i += 2) {
             bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
         }
         return bytes;
     }),
-    bytesToHex: vi.fn().mockImplementation((bytes) => {
+    bytesToHex: vitest_1.vi.fn().mockImplementation((bytes) => {
         return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
     }),
     nip44: {
-        getConversationKey: vi.fn().mockReturnValue(new Uint8Array(32)),
-        encrypt: vi.fn().mockImplementation((plaintext) => `nip44_encrypted_${plaintext}`),
-        decrypt: vi.fn().mockImplementation(() => 'nip44_decrypted_message'),
+        getConversationKey: vitest_1.vi.fn().mockReturnValue(new Uint8Array(32)),
+        encrypt: vitest_1.vi.fn().mockImplementation((plaintext) => `nip44_encrypted_${plaintext}`),
+        decrypt: vitest_1.vi.fn().mockImplementation(() => 'nip44_decrypted_message'),
     },
 }));
 // Mock WebSocket client
-vi.mock('nostr-websocket-utils', () => ({
-    NostrWSClient: vi.fn().mockImplementation((urls) => ({
+vitest_1.vi.mock('nostr-websocket-utils', () => ({
+    NostrWSClient: vitest_1.vi.fn().mockImplementation((urls) => ({
         urls,
-        connect: vi.fn().mockResolvedValue(undefined),
-        disconnect: vi.fn().mockResolvedValue(undefined),
-        sendMessage: vi.fn().mockResolvedValue(undefined)
+        connect: vitest_1.vi.fn().mockResolvedValue(undefined),
+        disconnect: vitest_1.vi.fn().mockResolvedValue(undefined),
+        sendMessage: vitest_1.vi.fn().mockResolvedValue(undefined)
     }))
 }));
 // Mock logger
-vi.mock('pino', () => ({
-    default: vi.fn().mockReturnValue({
-        info: vi.fn(),
-        error: vi.fn(),
-        warn: vi.fn(),
-        debug: vi.fn()
+vitest_1.vi.mock('pino', () => ({
+    default: vitest_1.vi.fn().mockReturnValue({
+        info: vitest_1.vi.fn(),
+        error: vitest_1.vi.fn(),
+        warn: vitest_1.vi.fn(),
+        debug: vitest_1.vi.fn()
     })
 }));
 // Set test environment variables

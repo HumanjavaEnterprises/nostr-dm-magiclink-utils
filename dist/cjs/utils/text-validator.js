@@ -1,6 +1,12 @@
+"use strict";
 /**
  * Utilities for validating and sanitizing text to ensure no HTML/Markdown injection
  */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.containsHtmlOrMarkdown = containsHtmlOrMarkdown;
+exports.validatePlainText = validatePlainText;
+exports.validateUrl = validateUrl;
+exports.validateLanguageCode = validateLanguageCode;
 const HTML_PATTERN = /<[^>]*>/;
 const MARKDOWN_PATTERNS = [
     /\[.*\]\(.*\)/, // Links
@@ -17,7 +23,7 @@ const MARKDOWN_PATTERNS = [
  * @param text - The text to check for HTML or Markdown syntax
  * @returns True if the text contains HTML or Markdown formatting, false otherwise
  */
-export function containsHtmlOrMarkdown(text) {
+function containsHtmlOrMarkdown(text) {
     // Check for HTML
     if (HTML_PATTERN.test(text)) {
         return true;
@@ -30,7 +36,7 @@ export function containsHtmlOrMarkdown(text) {
  * @param text - The text to validate and sanitize
  * @returns The sanitized plain text with all HTML and Markdown syntax removed
  */
-export function validatePlainText(text) {
+function validatePlainText(text) {
     if (!text)
         return '';
     // Remove HTML tags
@@ -52,7 +58,7 @@ export function validatePlainText(text) {
  * @param url - The URL to validate and sanitize
  * @returns The sanitized URL if valid, empty string otherwise
  */
-export function validateUrl(url) {
+function validateUrl(url) {
     if (!url)
         return '';
     try {
@@ -81,7 +87,7 @@ export function validateUrl(url) {
  * @param code - The language code to validate
  * @returns True if the code is a valid language code, false otherwise
  */
-export function validateLanguageCode(code) {
+function validateLanguageCode(code) {
     if (!code)
         return false;
     // ISO 639-1 language code pattern

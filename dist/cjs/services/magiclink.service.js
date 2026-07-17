@@ -1,12 +1,18 @@
-import { createLogger } from '../utils/logger.js';
-import { NostrError, NostrErrorCode } from '../types/index.js';
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MagicLinkManager = void 0;
+const logger_js_1 = require("../utils/logger.js");
+const index_js_1 = require("../types/index.js");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const crypto_1 = __importDefault(require("crypto"));
 /**
  * Manager for handling magic link authentication
  * Manages generation, sending, and verification of magic links through Nostr protocol
  */
-export class MagicLinkManager {
+class MagicLinkManager {
     nostrService;
     config;
     logger;
@@ -36,7 +42,7 @@ export class MagicLinkManager {
     constructor(nostrService, config, logger) {
         this.nostrService = nostrService;
         this.config = config;
-        this.logger = logger || createLogger('MagicLinkManager');
+        this.logger = logger || (0, logger_js_1.createLogger)('MagicLinkManager');
     }
     /**
      * Sends a magic link to a recipient via Nostr direct message
@@ -57,7 +63,7 @@ export class MagicLinkManager {
             };
         }
         catch (error) {
-            const errorDetails = new NostrError('Failed to send magic link', NostrErrorCode.GENERAL_ERROR, error instanceof Error ? error : undefined);
+            const errorDetails = new index_js_1.NostrError('Failed to send magic link', index_js_1.NostrErrorCode.GENERAL_ERROR, error instanceof Error ? error : undefined);
             throw errorDetails;
         }
     }
@@ -71,7 +77,7 @@ export class MagicLinkManager {
             // Clean up expired consumed tokens before verification
             this.cleanupConsumedTokens();
             const secret = this.getJwtSecret();
-            const decoded = jwt.verify(token, secret);
+            const decoded = jsonwebtoken_1.default.verify(token, secret);
             if (!decoded || !decoded.pubkey) {
                 throw new Error('Invalid token payload');
             }
@@ -92,7 +98,7 @@ export class MagicLinkManager {
             return decoded.pubkey;
         }
         catch (error) {
-            const errorDetails = new NostrError('Failed to verify magic link', NostrErrorCode.GENERAL_ERROR, error instanceof Error ? error : undefined);
+            const errorDetails = new index_js_1.NostrError('Failed to verify magic link', index_js_1.NostrErrorCode.GENERAL_ERROR, error instanceof Error ? error : undefined);
             throw errorDetails;
         }
     }
@@ -121,14 +127,14 @@ export class MagicLinkManager {
     async generateToken(pubkey) {
         try {
             const secret = this.getJwtSecret();
-            const jti = crypto.randomBytes(16).toString('hex');
+            const jti = crypto_1.default.randomBytes(16).toString('hex');
             // If config.token is a function, call it and include the result as additional payload data
             let additionalData = {};
             if (typeof this.config.token === 'function') {
                 const tokenData = await this.config.token();
                 additionalData = { tokenData };
             }
-            const token = jwt.sign({
+            const token = jsonwebtoken_1.default.sign({
                 pubkey,
                 jti,
                 ...additionalData,
@@ -136,7 +142,7 @@ export class MagicLinkManager {
             return token;
         }
         catch (error) {
-            const errorDetails = new NostrError('Failed to generate token', NostrErrorCode.TOKEN_GENERATION_ERROR, error instanceof Error ? error : undefined);
+            const errorDetails = new index_js_1.NostrError('Failed to generate token', index_js_1.NostrErrorCode.TOKEN_GENERATION_ERROR, error instanceof Error ? error : undefined);
             throw errorDetails;
         }
     }
@@ -179,4 +185,5 @@ export class MagicLinkManager {
         return message;
     }
 }
+exports.MagicLinkManager = MagicLinkManager;
 //# sourceMappingURL=magiclink.service.js.map

@@ -2,6 +2,7 @@
  * @file Logger utility
  * @module utils/logger
  */
+import pino from 'pino';
 import type { Logger } from 'pino';
 /**
  * Create a new logger instance
@@ -25,5 +26,5 @@ export declare function getChildLogger(parent: Logger, bindings: object): Logger
 /**
  * Default logger instance
  */
-export declare const logger: Logger;
+export declare const logger: pino.Logger;
 //# sourceMappingURL=logger.d.ts.map

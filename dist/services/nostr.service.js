@@ -85,7 +85,7 @@ export class NostrService {
                 this.config.relayUrls.push(url);
             }
         }
-        catch (error) {
+        catch {
             throw new NostrError(`Failed to add relay ${url}`, NostrErrorCode.RELAY_ERROR);
         }
     }
@@ -103,7 +103,7 @@ export class NostrService {
             this.wsClients.delete(url);
             this.config.relayUrls = this.config.relayUrls.filter(u => u !== url);
         }
-        catch (error) {
+        catch {
             throw new NostrError(`Failed to remove relay ${url}`, NostrErrorCode.RELAY_ERROR);
         }
     }
@@ -117,7 +117,7 @@ export class NostrService {
             await client.connect();
             this.wsClients.set(url, client);
         }
-        catch (error) {
+        catch {
             throw new NostrError(`Failed to connect to relay ${url}`, NostrErrorCode.RELAY_CONNECTION_FAILED);
         }
     }

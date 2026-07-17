@@ -1,17 +1,25 @@
+"use strict";
 /**
  * @module nips/nip01
  * @description Implementation of NIP-01 functionality for direct messages
  */
-import { getPublicKeySync, finalizeEvent, verifySignature as cryptoVerifySignature } from 'nostr-crypto-utils';
-import { NostrError, NostrErrorCode } from '../types/errors.js';
-import { sha256 } from '@noble/hashes/sha2.js';
-import { bytesToHex } from '@noble/hashes/utils.js';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createEvent = createEvent;
+exports.serializeEvent = serializeEvent;
+exports.calculateEventHash = calculateEventHash;
+exports.signedEvent = signedEvent;
+exports.verifyEvent = verifyEvent;
+exports.validateEvent = validateEvent;
+const nostr_crypto_utils_1 = require("nostr-crypto-utils");
+const errors_js_1 = require("../types/errors.js");
+const sha2_js_1 = require("@noble/hashes/sha2.js");
+const utils_js_1 = require("@noble/hashes/utils.js");
 /**
  * Creates a new Nostr event with the specified parameters (NIP-01)
  * @param params - Event parameters
  * @returns Created event
  */
-export function createEvent(params) {
+function createEvent(params) {
     const { kind, content, tags = [], created_at = Math.floor(Date.now() / 1000), pubkey = '' } = params;
     return {
         kind,
@@ -26,7 +34,7 @@ export function createEvent(params) {
  * @param event - Event to serialize
  * @returns Serialized event JSON string
  */
-export function serializeEvent(event) {
+function serializeEvent(event) {
     return JSON.stringify([
         0,
         event.pubkey,
@@ -41,10 +49,10 @@ export function serializeEvent(event) {
  * @param event - Event to hash
  * @returns Event hash in hex format
  */
-export function calculateEventHash(event) {
+function calculateEventHash(event) {
     const serialized = serializeEvent(event);
-    const hash = sha256(new TextEncoder().encode(serialized));
-    return bytesToHex(hash);
+    const hash = (0, sha2_js_1.sha256)(new TextEncoder().encode(serialized));
+    return (0, utils_js_1.bytesToHex)(hash);
 }
 /**
  * Creates and signs a Nostr event (NIP-01)
@@ -52,13 +60,13 @@ export function calculateEventHash(event) {
  * @param params - Event parameters including private key
  * @returns Signed event
  */
-export async function signedEvent(params) {
+async function signedEvent(params) {
     try {
         const { privateKey, ...eventParams } = params;
         // Derive pubkey synchronously if not provided
-        const pubkey = eventParams.pubkey || getPublicKeySync(privateKey);
+        const pubkey = eventParams.pubkey || (0, nostr_crypto_utils_1.getPublicKeySync)(privateKey);
         // Use finalizeEvent for one-step create + hash + sign
-        const signed = await finalizeEvent({
+        const signed = await (0, nostr_crypto_utils_1.finalizeEvent)({
             kind: eventParams.kind,
             content: eventParams.content,
             tags: eventParams.tags || [],
@@ -77,7 +85,7 @@ export async function signedEvent(params) {
         };
     }
     catch (_error) {
-        throw new NostrError('Failed to create signed event', NostrErrorCode.EVENT_CREATION_FAILED);
+        throw new errors_js_1.NostrError('Failed to create signed event', errors_js_1.NostrErrorCode.EVENT_CREATION_FAILED);
     }
 }
 /**
@@ -85,12 +93,12 @@ export async function signedEvent(params) {
  * @param event - Event to verify
  * @returns True if signature is valid
  */
-export async function verifyEvent(event) {
+async function verifyEvent(event) {
     try {
-        return await cryptoVerifySignature(event);
+        return await (0, nostr_crypto_utils_1.verifySignature)(event);
     }
     catch (_error) {
-        throw new NostrError('Failed to verify event', NostrErrorCode.EVENT_VERIFICATION_FAILED);
+        throw new errors_js_1.NostrError('Failed to verify event', errors_js_1.NostrErrorCode.EVENT_VERIFICATION_FAILED);
     }
 }
 /**
@@ -98,7 +106,7 @@ export async function verifyEvent(event) {
  * @param event - Event to validate
  * @returns True if event structure is valid
  */
-export function validateEvent(event) {
+function validateEvent(event) {
     try {
         if (!event.pubkey || !event.created_at || event.kind === undefined || !event.content) {
             return false;

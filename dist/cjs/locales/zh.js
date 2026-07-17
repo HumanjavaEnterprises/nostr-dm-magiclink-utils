@@ -1,4 +1,6 @@
-export default {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = {
     direction: 'ltr',
     magicLink: {
         title: '登录到{{appName}}:',

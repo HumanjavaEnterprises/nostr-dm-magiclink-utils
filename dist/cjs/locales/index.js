@@ -1,32 +1,38 @@
-import en from './en.js';
-import es from './es.js';
-import fr from './fr.js';
-import ar from './ar.js';
-import ja from './ja.js';
-import pt from './pt.js';
-import zh from './zh.js';
-import ko from './ko.js';
-import ru from './ru.js';
-import { validatePlainText, validateUrl } from '../utils/text-validator.js';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.LocaleService = void 0;
+const en_js_1 = __importDefault(require("./en.js"));
+const es_js_1 = __importDefault(require("./es.js"));
+const fr_js_1 = __importDefault(require("./fr.js"));
+const ar_js_1 = __importDefault(require("./ar.js"));
+const ja_js_1 = __importDefault(require("./ja.js"));
+const pt_js_1 = __importDefault(require("./pt.js"));
+const zh_js_1 = __importDefault(require("./zh.js"));
+const ko_js_1 = __importDefault(require("./ko.js"));
+const ru_js_1 = __importDefault(require("./ru.js"));
+const text_validator_js_1 = require("../utils/text-validator.js");
 /**
  * Record of locale messages
  */
 const messages = {
-    en,
-    es,
-    fr,
-    ar,
-    ja,
-    pt,
-    zh,
-    ko,
-    ru
+    en: en_js_1.default,
+    es: es_js_1.default,
+    fr: fr_js_1.default,
+    ar: ar_js_1.default,
+    ja: ja_js_1.default,
+    pt: pt_js_1.default,
+    zh: zh_js_1.default,
+    ko: ko_js_1.default,
+    ru: ru_js_1.default
 };
 /**
  * Service for handling internationalization and localization
  * Provides methods for managing locales, text direction, and message formatting
  */
-export class LocaleService {
+class LocaleService {
     /**
      * Default locale
      */
@@ -90,11 +96,11 @@ export class LocaleService {
      */
     formatMagicLinkMessage(params) {
         // Validate all inputs
-        const safeAppName = validatePlainText(params.appName);
-        const safeMagicLink = validateUrl(params.magicLink);
+        const safeAppName = (0, text_validator_js_1.validatePlainText)(params.appName);
+        const safeMagicLink = (0, text_validator_js_1.validateUrl)(params.magicLink);
         // Validate context if provided
         const safeContext = params.context ? Object.fromEntries(Object.entries(params.context)
-            .map(([key, value]) => [key, value ? validatePlainText(value) : undefined])
+            .map(([key, value]) => [key, value ? (0, text_validator_js_1.validatePlainText)(value) : undefined])
             .filter(([, value]) => value !== undefined)) : undefined;
         const locale = messages[this.currentLocale];
         const { title, alternative, expiry, securityTip, context: contextTemplates } = locale.magicLink;
@@ -141,4 +147,5 @@ export class LocaleService {
         return this.currentLocale;
     }
 }
+exports.LocaleService = LocaleService;
 //# sourceMappingURL=index.js.map

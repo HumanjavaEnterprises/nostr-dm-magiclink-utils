@@ -1,5 +1,9 @@
-import { encrypt as cryptoEncryptMessage, decrypt as cryptoDecryptMessage } from 'nostr-crypto-utils';
-import { NostrError } from '../types/errors.js';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.encryptMessage = encryptMessage;
+exports.decryptMessage = decryptMessage;
+const nostr_crypto_utils_1 = require("nostr-crypto-utils");
+const errors_js_1 = require("../types/errors.js");
 /**
  * Encrypts a message following NIP-04 specification
  * @param message - The message to encrypt
@@ -8,7 +12,7 @@ import { NostrError } from '../types/errors.js';
  * @returns Promise resolving to the encrypted message
  * @throws NostrError if encryption fails or inputs are invalid
  */
-export async function encryptMessage(message, privateKey, publicKey) {
+async function encryptMessage(message, privateKey, publicKey) {
     try {
         // Validate inputs
         if (!message) {
@@ -32,11 +36,11 @@ export async function encryptMessage(message, privateKey, publicKey) {
             message = ' ';
         }
         // Note: encryptMessage expects (message, senderPrivkey, recipientPubkey)
-        const result = await cryptoEncryptMessage(message, privateKey, publicKey);
+        const result = await (0, nostr_crypto_utils_1.encrypt)(message, privateKey, publicKey);
         return result;
     }
     catch (error) {
-        throw new NostrError('Message encryption failed: ' + error.message, 'ENCRYPTION_FAILED');
+        throw new errors_js_1.NostrError('Message encryption failed: ' + error.message, 'ENCRYPTION_FAILED');
     }
 }
 /**
@@ -47,7 +51,7 @@ export async function encryptMessage(message, privateKey, publicKey) {
  * @returns Promise resolving to the decrypted message
  * @throws NostrError if decryption fails
  */
-export async function decryptMessage(encryptedMessage, privateKey, publicKey) {
+async function decryptMessage(encryptedMessage, privateKey, publicKey) {
     try {
         // Validate inputs
         if (!encryptedMessage) {
@@ -67,11 +71,11 @@ export async function decryptMessage(encryptedMessage, privateKey, publicKey) {
             throw new Error('Invalid key format: must be 64 hex characters');
         }
         // Note: decryptMessage expects (encryptedMessage, senderPubkey, recipientPrivkey)
-        const result = await cryptoDecryptMessage(encryptedMessage, publicKey, privateKey);
+        const result = await (0, nostr_crypto_utils_1.decrypt)(encryptedMessage, publicKey, privateKey);
         return result;
     }
     catch (error) {
-        throw new NostrError('Message decryption failed: ' + error.message, 'DECRYPTION_FAILED');
+        throw new errors_js_1.NostrError('Message decryption failed: ' + error.message, 'DECRYPTION_FAILED');
     }
 }
 //# sourceMappingURL=nip04.js.map

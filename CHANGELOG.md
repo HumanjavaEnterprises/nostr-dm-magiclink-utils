@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2026-07-16
+
+### Fixed
+- CJS consumers could not `require()` the package. The `dist/cjs` build used `module: NodeNext`, which under the root `"type": "module"` emitted ESM (`import`) into `dist/cjs` — and there was no `dist/cjs/package.json` shim. `tsconfig.cjs.json` now uses `module: CommonJS` / `moduleResolution: Node`, and `build` writes `dist/cjs/package.json` `{"type":"commonjs"}`, so the `require` export condition works.
+- `utils/logger.ts` now uses a plain `import pino from 'pino'` instead of the ESM-only `createRequire(import.meta.url)` idiom, so the source compiles cleanly for both the ESM and CommonJS targets.
+
 ## [0.3.0] - 2026-03-06
 
 ### Changed

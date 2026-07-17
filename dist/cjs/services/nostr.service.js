@@ -1,13 +1,16 @@
-import { encrypt } from 'nostr-crypto-utils';
-import { NostrWSClient } from 'nostr-websocket-utils';
-import { NostrError, NostrErrorCode } from '../types/errors.js';
-import { signedEvent } from '../nips/nip01.js';
-import { encryptNip44 } from '../nips/nip44.js';
-import { createLogger } from '../utils/logger.js';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NostrService = void 0;
+const nostr_crypto_utils_1 = require("nostr-crypto-utils");
+const nostr_websocket_utils_1 = require("nostr-websocket-utils");
+const errors_js_1 = require("../types/errors.js");
+const nip01_js_1 = require("../nips/nip01.js");
+const nip44_js_1 = require("../nips/nip44.js");
+const logger_js_1 = require("../utils/logger.js");
 /**
  * Implementation of the Nostr service for handling direct messages
  */
-export class NostrService {
+class NostrService {
     config;
     logger;
     wsClients;
@@ -20,7 +23,7 @@ export class NostrService {
      */
     constructor(config, logger) {
         this.config = config;
-        this.logger = logger || createLogger('NostrService');
+        this.logger = logger || (0, logger_js_1.createLogger)('NostrService');
         this.wsClients = new Map();
     }
     /**
@@ -29,7 +32,7 @@ export class NostrService {
     async connect() {
         try {
             if (!this.config.relayUrls?.length) {
-                throw new NostrError('No relay URLs configured', NostrErrorCode.CONFIGURATION_ERROR);
+                throw new errors_js_1.NostrError('No relay URLs configured', errors_js_1.NostrErrorCode.CONFIGURATION_ERROR);
             }
             await Promise.all(this.config.relayUrls.map(url => this.connectToRelay(url)));
             this.isConnected = true;
@@ -85,8 +88,8 @@ export class NostrService {
                 this.config.relayUrls.push(url);
             }
         }
-        catch (error) {
-            throw new NostrError(`Failed to add relay ${url}`, NostrErrorCode.RELAY_ERROR);
+        catch {
+            throw new errors_js_1.NostrError(`Failed to add relay ${url}`, errors_js_1.NostrErrorCode.RELAY_ERROR);
         }
     }
     /**
@@ -103,8 +106,8 @@ export class NostrService {
             this.wsClients.delete(url);
             this.config.relayUrls = this.config.relayUrls.filter(u => u !== url);
         }
-        catch (error) {
-            throw new NostrError(`Failed to remove relay ${url}`, NostrErrorCode.RELAY_ERROR);
+        catch {
+            throw new errors_js_1.NostrError(`Failed to remove relay ${url}`, errors_js_1.NostrErrorCode.RELAY_ERROR);
         }
     }
     /**
@@ -113,12 +116,12 @@ export class NostrService {
      */
     async connectToRelay(url) {
         try {
-            const client = new NostrWSClient([url]);
+            const client = new nostr_websocket_utils_1.NostrWSClient([url]);
             await client.connect();
             this.wsClients.set(url, client);
         }
-        catch (error) {
-            throw new NostrError(`Failed to connect to relay ${url}`, NostrErrorCode.RELAY_CONNECTION_FAILED);
+        catch {
+            throw new errors_js_1.NostrError(`Failed to connect to relay ${url}`, errors_js_1.NostrErrorCode.RELAY_CONNECTION_FAILED);
         }
     }
     /**
@@ -131,10 +134,10 @@ export class NostrService {
         try {
             // Validate configuration
             if (!this.config.privateKey || this.config.privateKey.trim() === '') {
-                throw new NostrError('Private key is required', NostrErrorCode.CONFIGURATION_ERROR);
+                throw new errors_js_1.NostrError('Private key is required', errors_js_1.NostrErrorCode.CONFIGURATION_ERROR);
             }
             if (!this.config.relayUrls || this.config.relayUrls.length === 0) {
-                throw new NostrError('At least one relay URL is required', NostrErrorCode.CONFIGURATION_ERROR);
+                throw new errors_js_1.NostrError('At least one relay URL is required', errors_js_1.NostrErrorCode.CONFIGURATION_ERROR);
             }
             // Connect to relays if not already connected
             if (!this.isConnected) {
@@ -143,8 +146,8 @@ export class NostrService {
             // Encrypt the message using the configured encryption mode
             const useNip44 = this.config.encryptionMode === 'nip44';
             const encryptedContent = useNip44
-                ? await encryptNip44(content, this.config.privateKey, pubkey)
-                : await encrypt(content, this.config.privateKey, pubkey);
+                ? await (0, nip44_js_1.encryptNip44)(content, this.config.privateKey, pubkey)
+                : await (0, nostr_crypto_utils_1.encrypt)(content, this.config.privateKey, pubkey);
             // Create and sign the Nostr event
             // NIP-04 uses kind 4; NIP-44 uses kind 44
             const eventParams = {
@@ -153,7 +156,7 @@ export class NostrService {
                 kind: useNip44 ? 44 : 4,
                 tags: [['p', pubkey]]
             };
-            const event = await signedEvent(eventParams);
+            const event = await (0, nip01_js_1.signedEvent)(eventParams);
             // Send the event to all connected relays
             const sendPromises = Array.from(this.wsClients.entries())
                 .map(async ([url, client]) => {
@@ -162,21 +165,22 @@ export class NostrService {
                 }
                 catch (error) {
                     this.logger.error({ relayUrl: url, error }, 'Failed to send event to relay');
-                    throw new NostrError(`Failed to send event to relay ${url}`, NostrErrorCode.RELAY_ERROR);
+                    throw new errors_js_1.NostrError(`Failed to send event to relay ${url}`, errors_js_1.NostrErrorCode.RELAY_ERROR);
                 }
             });
             await Promise.all(sendPromises);
             return event;
         }
         catch (error) {
-            if (error instanceof NostrError) {
+            if (error instanceof errors_js_1.NostrError) {
                 throw error;
             }
-            throw new NostrError('Failed to send direct message', NostrErrorCode.MESSAGE_SEND_FAILED);
+            throw new errors_js_1.NostrError('Failed to send direct message', errors_js_1.NostrErrorCode.MESSAGE_SEND_FAILED);
         }
     }
 }
+exports.NostrService = NostrService;
 function isNostrWSClient(client) {
-    return client instanceof NostrWSClient;
+    return client instanceof nostr_websocket_utils_1.NostrWSClient;
 }
 //# sourceMappingURL=nostr.service.js.map
