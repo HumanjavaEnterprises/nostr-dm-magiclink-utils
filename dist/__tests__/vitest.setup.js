@@ -31,16 +31,12 @@ vi.mock('nostr-crypto-utils', () => ({
         // Always return true for tests
         return true;
     }),
-    encrypt: vi.fn().mockImplementation((message) => {
-        // Return a mock encrypted message
-        return `encrypted_${message}`;
-    }),
-    decrypt: vi.fn().mockImplementation((_encrypted) => {
-        return 'decrypted_message';
-    }),
     encryptMessage: vi.fn().mockImplementation((message) => {
         // Return a mock encrypted message
         return `encrypted_${message}`;
+    }),
+    decryptMessage: vi.fn().mockImplementation((_encrypted) => {
+        return 'decrypted_message';
     }),
     hexToBytes: vi.fn().mockImplementation((hex) => {
         const bytes = new Uint8Array(hex.length / 2);

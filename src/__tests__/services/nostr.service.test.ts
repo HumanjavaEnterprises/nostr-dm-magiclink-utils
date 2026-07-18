@@ -18,7 +18,8 @@ vi.mock('nostr-websocket-utils', () => ({
 }));
 
 vi.mock('nostr-crypto-utils', () => ({
-  encrypt: vi.fn().mockResolvedValue('encrypted_test message'),
+  encryptMessage: vi.fn().mockResolvedValue('encrypted_test message'),
+  decryptMessage: vi.fn().mockResolvedValue('decrypted_test message'),
   generateKeyPair: vi.fn().mockResolvedValue({
     publicKey: 'pub_test-private-key',
     privateKey: 'test-private-key'
@@ -60,6 +61,9 @@ vi.mock('../../nips/nip01', () => ({
   })
 }));
 
+// Valid 64-char hex x-only pubkey for recipient-validation checks
+const VALID_PUBKEY = 'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210';
+
 describe('NostrService', () => {
   let service: NostrService;
   let config: NostrServiceConfig;
@@ -78,17 +82,25 @@ describe('NostrService', () => {
   describe('core functionality', () => {
     it('should send direct message successfully when connected', async () => {
       await service.connect();
-      const event = await service.sendDirectMessage('test-pubkey', 'test message');
-      
+      const event = await service.sendDirectMessage(VALID_PUBKEY, 'test message');
+
       expect(event).toBeDefined();
       expect(event.kind).toBe(4); // Direct message kind
       expect(mockSendMessage).toHaveBeenCalled();
     });
 
+    it('should reject an invalid (non-64-hex) recipient pubkey', async () => {
+      await service.connect();
+      await expect(
+        service.sendDirectMessage('not-a-valid-pubkey', 'test message')
+      ).rejects.toThrow(/Invalid recipient public key/);
+      expect(mockSendMessage).not.toHaveBeenCalled();
+    });
+
     it('should throw error if private key is empty', async () => {
       service = new NostrService({ ...config, privateKey: '' });
       await expect(
-        service.sendDirectMessage('test-pubkey', 'test message')
+        service.sendDirectMessage(VALID_PUBKEY, 'test message')
       ).rejects.toThrow(NostrError);
       expect(mockSendMessage).not.toHaveBeenCalled();
     });

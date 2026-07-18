@@ -1,9 +1,15 @@
 declare module 'nostr-crypto-utils' {
-    export function encrypt(message: string, recipientPubKey: string, senderPrivKey: string): Promise<string>;
+    // Canonical NIP-04 API (nostr-crypto-utils >= 0.8.0). The previous swapped-order
+    // `encrypt`/`decrypt` exports were removed; use these named functions.
+    export function encryptMessage(message: string, senderPrivKey: string, recipientPubKey: string): Promise<string> | string;
 
-    export function decrypt(encryptedMessage: string, senderPubKey: string, recipientPrivKey: string): Promise<string>;
+    export function decryptMessage(ciphertext: string, recipientPrivKey: string, senderPubKey: string): Promise<string> | string;
 
-    export function generateKeyPair(): Promise<{ publicKey: string; privateKey: string }>;
+    export function asPrivateKey(hex: string): string;
+
+    export function asPublicKey(hex: string): string;
+
+    export function generateKeyPair(): Promise<{ publicKey: { hex: string; bytes: Uint8Array }; privateKey: string }>;
 
     export function getPublicKey(privateKey: string): Promise<{ hex: string; bytes: Uint8Array }>;
 

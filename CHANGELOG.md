@@ -5,6 +5,72 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-07-18
+
+Correctness release. A coherence audit confirmed the library's core send path
+was broken out of the box: every default `sendMagicLink` call threw, and the
+only working encryption mode published events under a kind no client recognises
+as a DM. This release fixes all eight confirmed bugs. **It is a breaking release**
+because both the emitted event kind and the required `nostr-crypto-utils` API
+have changed.
+
+### Breaking Changes
+- **Canonical NIP-04 crypto API.** The package now depends on
+  `nostr-crypto-utils` ^0.8.0 and calls `encryptMessage(message, senderPrivkey,
+  recipientPubkey)` / `decryptMessage(ciphertext, recipientPrivkey, senderPubkey)`.
+  The previous swapped-order `encrypt` / `decrypt` exports were removed upstream.
+- **Direct messages are always emitted as kind 4** (standard NIP-04 encrypted
+  DM). Previously the NIP-44 encryption mode emitted the non-standard **kind 44**,
+  which no relay or client treats as a DM, so recipients never saw the message.
+  The `encryptionMode: 'nip44'` option still selects NIP-44 payload encryption but
+  the event kind is now 4 in all cases.
+
+### Fixed
+- **NIP-04 encrypt path threw on every default send (release blocker).** All three
+  encrypt call sites (`src/services/nostr.service.ts`, `src/nips/nip04.ts`,
+  `src/protocol/nips/nip04.ts`) now use the canonical `encryptMessage` signature,
+  so the out-of-the-box `sendMagicLink` flow works. The NIP-04 decrypt wrapper
+  argument order was corrected to `decryptMessage(ciphertext, recipientPrivkey,
+  senderPubkey)`.
+- **Non-standard kind 44 DMs (release blocker).** Events are now kind 4 so relays
+  and clients recognise them as direct messages.
+- **Content corruption in `protocol/nips/nip01.ts createEvent`.** A random nonce
+  was appended to the event content before signing (`content:nonce`), which
+  mangled NIP-04 ciphertext and broke recipient decryption. The content is now
+  signed unchanged; NIP-01 uniqueness already derives from `created_at` + pubkey
+  + the event id hash.
+- **Template placeholders replaced only once.** `formatMessage` now uses
+  `replaceAll`, so a placeholder used more than once (e.g. `{{link}}` as visible
+  text and again inside markup) is fully substituted.
+- **Relay socket leak in `connectToRelay`.** A failed `connect()` now tears down
+  the partially-opened websocket, and a dedup guard prevents overwriting (and
+  orphaning) an already-connected client.
+- **Unvalidated recipient pubkey.** `sendDirectMessage` and `sendMagicLink` now
+  reject a recipient public key that is not a 64-character hex string before any
+  crypto/event work, instead of failing with an opaque low-level error.
+- **`validateEvent` rejected valid events.** It used truthiness checks that
+  wrongly rejected `content: ''` (contact lists, reactions, deletes) and
+  `created_at: 0`. It now uses `typeof` / presence checks.
+
+### Added
+- **Pluggable replay-protection store.** The consumed-token (jti) store is now an
+  injectable `ConsumedTokenStore` interface (4th constructor arg of
+  `MagicLinkManager`), defaulting to the in-memory `InMemoryConsumedTokenStore`.
+  The in-memory default is single-instance only; inject a shared/persistent
+  implementation (e.g. Redis/DB keyed on jti + exp) for multi-instance or
+  serverless deployments. See the README "Replay protection" section.
+- Real end-to-end integration tests exercising actual NIP-04 crypto (encrypt →
+  publish → decrypt round-trip, kind-4 assertion, recipient-pubkey validation)
+  that would have caught the shipped bugs.
+
+### Future
+- **NIP-17 (modern private DMs).** The correct long-term path for the NIP-44
+  encryption mode is NIP-17: a kind 14 rumor sealed (kind 13) and gift-wrapped
+  (kind 1059, NIP-59). Kind 4 is the correct minimum for interoperability today;
+  NIP-17 support is planned as a follow-up enhancement.
+- **Persistent replay store implementations** (Redis/DB) shipped in-box are a
+  planned follow-up; the store is already injectable today.
+
 ## [0.3.2] - 2026-07-16
 
 ### Fixed

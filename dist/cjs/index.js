@@ -40,4 +40,7 @@ function createMagicLinkService(config) {
 __exportStar(require("./types/index.js"), exports);
 __exportStar(require("./services/nostr.service.js"), exports);
 __exportStar(require("./services/magiclink.service.js"), exports);
+// Pluggable replay-protection store (inject a persistent implementation for
+// multi-instance / serverless deployments)
+__exportStar(require("./services/consumed-token-store.js"), exports);
 //# sourceMappingURL=index.js.map

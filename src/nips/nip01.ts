@@ -125,7 +125,17 @@ export async function verifyEvent(event: SignedNostrEvent): Promise<boolean> {
  */
 export function validateEvent(event: NostrEvent): boolean {
   try {
-    if (!event.pubkey || !event.created_at || event.kind === undefined || !event.content) {
+    // Use type/presence checks rather than truthiness. Many valid Nostr events
+    // legitimately have content === '' (contact lists kind 3, reactions,
+    // deletes) or created_at === 0, both of which are falsy and would be
+    // wrongly rejected by a `!value` check.
+    if (
+      typeof event.pubkey !== 'string' ||
+      event.pubkey.length === 0 ||
+      typeof event.created_at !== 'number' ||
+      typeof event.kind !== 'number' ||
+      typeof event.content !== 'string'
+    ) {
       return false;
     }
 

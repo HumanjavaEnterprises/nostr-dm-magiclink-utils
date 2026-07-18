@@ -1,5 +1,4 @@
 import { getPublicKeySync, finalizeEvent, verifySignature } from 'nostr-crypto-utils';
-import crypto from 'crypto';
 import { NostrError, NostrErrorCode } from '../../types/errors.js';
 import { SignedNostrEvent } from '../../types/nostr.js';
 import { logger } from '../../utils/logger.js';
@@ -21,15 +20,17 @@ export const createEvent = async (
 ): Promise<SignedNostrEvent> => {
   try {
     const pubkey = getPublicKeySync(privateKey);
-    const nonce = crypto.randomBytes(4).readUInt32BE(0) % 1000000;
 
-    // Use finalizeEvent for one-step create + hash + sign
+    // Sign the content exactly as provided. Do NOT append a nonce to the
+    // content: doing so corrupts the payload (e.g. mangles NIP-04 ciphertext so
+    // the recipient cannot decrypt it). NIP-01 event uniqueness already derives
+    // from created_at + pubkey + the event id hash, so no extra nonce is needed.
     const signed = await finalizeEvent(
       {
         pubkey,
         kind,
         tags,
-        content: `${content}:${nonce}`,
+        content,
       },
       privateKey
     );

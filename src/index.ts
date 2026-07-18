@@ -29,3 +29,6 @@ export function createMagicLinkService(config: NostrMagicLinkConfig): MagicLinkM
 export * from './types/index.js';
 export * from './services/nostr.service.js';
 export * from './services/magiclink.service.js';
+// Pluggable replay-protection store (inject a persistent implementation for
+// multi-instance / serverless deployments)
+export * from './services/consumed-token-store.js';

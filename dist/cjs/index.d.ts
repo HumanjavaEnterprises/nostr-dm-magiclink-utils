@@ -9,4 +9,5 @@ export declare function createMagicLinkService(config: NostrMagicLinkConfig): Ma
 export * from './types/index.js';
 export * from './services/nostr.service.js';
 export * from './services/magiclink.service.js';
+export * from './services/consumed-token-store.js';
 //# sourceMappingURL=index.d.ts.map

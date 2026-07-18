@@ -1,11 +1,7 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyEvent = exports.createEvent = void 0;
 const nostr_crypto_utils_1 = require("nostr-crypto-utils");
-const crypto_1 = __importDefault(require("crypto"));
 const errors_js_1 = require("../../types/errors.js");
 const logger_js_1 = require("../../utils/logger.js");
 /**
@@ -20,13 +16,15 @@ const logger_js_1 = require("../../utils/logger.js");
 const createEvent = async (content, kind, privateKey, tags = []) => {
     try {
         const pubkey = (0, nostr_crypto_utils_1.getPublicKeySync)(privateKey);
-        const nonce = crypto_1.default.randomBytes(4).readUInt32BE(0) % 1000000;
-        // Use finalizeEvent for one-step create + hash + sign
+        // Sign the content exactly as provided. Do NOT append a nonce to the
+        // content: doing so corrupts the payload (e.g. mangles NIP-04 ciphertext so
+        // the recipient cannot decrypt it). NIP-01 event uniqueness already derives
+        // from created_at + pubkey + the event id hash, so no extra nonce is needed.
         const signed = await (0, nostr_crypto_utils_1.finalizeEvent)({
             pubkey,
             kind,
             tags,
-            content: `${content}:${nonce}`,
+            content,
         }, privateKey);
         return {
             pubkey: signed.pubkey,

@@ -2,7 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { encryptMessage } from '../../nips/nip04.js';
 
 vi.mock('nostr-crypto-utils', () => ({
-  encrypt: vi.fn().mockImplementation((message: string, privateKey: string, publicKey: string) => {
+  // Canonical NIP-04 API: encryptMessage(message, senderPrivkey, recipientPubkey)
+  encryptMessage: vi.fn().mockImplementation((message: string, privateKey: string, publicKey: string) => {
     if (!privateKey || !publicKey) {
       throw new Error('Invalid parameters');
     }
@@ -14,7 +15,8 @@ vi.mock('nostr-crypto-utils', () => ({
     }
     return Promise.resolve('encrypted_message');
   }),
-  decrypt: vi.fn().mockImplementation((_encryptedMessage: string, privateKey: string, publicKey: string) => {
+  // Canonical NIP-04 API: decryptMessage(ciphertext, recipientPrivkey, senderPubkey)
+  decryptMessage: vi.fn().mockImplementation((_ciphertext: string, privateKey: string, publicKey: string) => {
     if (!privateKey || !publicKey) {
       throw new Error('Invalid parameters');
     }

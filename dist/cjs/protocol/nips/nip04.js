@@ -26,11 +26,14 @@ exports.NIP44_KIND = 44;
  */
 async function createEncryptedDirectMessage(content, recipientPubkey, senderPrivateKey, senderPubkey, encryptionMode = 'nip04') {
     const useNip44 = encryptionMode === 'nip44';
+    // Canonical NIP-04 API: encryptMessage(message, senderPrivKey, recipientPubKey).
     const encryptedContent = useNip44
         ? await (0, nip44_js_1.encryptNip44)(content, senderPrivateKey, recipientPubkey)
-        : await (0, nostr_crypto_utils_1.encrypt)(content, senderPrivateKey, recipientPubkey);
+        : await (0, nostr_crypto_utils_1.encryptMessage)(content, senderPrivateKey, recipientPubkey);
     return {
-        kind: useNip44 ? exports.NIP44_KIND : exports.NIP04_KIND,
+        // Always emit kind 4 (standard NIP-04 encrypted DM). Kind 44 is not a real
+        // DM event kind and no client recognises it as a direct message.
+        kind: exports.NIP04_KIND,
         pubkey: senderPubkey,
         created_at: Math.floor(Date.now() / 1000),
         tags: [['p', recipientPubkey]],

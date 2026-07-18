@@ -23,8 +23,8 @@ vitest_1.vi.mock('nostr-crypto-utils', () => ({
         publicKey: 'test-public-key'
     }),
     validateKeyPair: vitest_1.vi.fn().mockReturnValue(true),
-    encrypt: vitest_1.vi.fn().mockResolvedValue('encrypted-content'),
-    decrypt: vitest_1.vi.fn().mockResolvedValue('decrypted-message'),
+    encryptMessage: vitest_1.vi.fn().mockResolvedValue('encrypted-content'),
+    decryptMessage: vitest_1.vi.fn().mockResolvedValue('decrypted-message'),
     getEventHash: vitest_1.vi.fn().mockReturnValue('test-hash'),
     signEvent: vitest_1.vi.fn().mockReturnValue('test-signature'),
     getPublicKey: vitest_1.vi.fn().mockResolvedValue({ hex: 'test-public-key', bytes: new Uint8Array(32) }),

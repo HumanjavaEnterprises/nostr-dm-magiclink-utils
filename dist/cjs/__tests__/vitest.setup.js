@@ -33,16 +33,12 @@ vitest_1.vi.mock('nostr-crypto-utils', () => ({
         // Always return true for tests
         return true;
     }),
-    encrypt: vitest_1.vi.fn().mockImplementation((message) => {
-        // Return a mock encrypted message
-        return `encrypted_${message}`;
-    }),
-    decrypt: vitest_1.vi.fn().mockImplementation((_encrypted) => {
-        return 'decrypted_message';
-    }),
     encryptMessage: vitest_1.vi.fn().mockImplementation((message) => {
         // Return a mock encrypted message
         return `encrypted_${message}`;
+    }),
+    decryptMessage: vitest_1.vi.fn().mockImplementation((_encrypted) => {
+        return 'decrypted_message';
     }),
     hexToBytes: vitest_1.vi.fn().mockImplementation((hex) => {
         const bytes = new Uint8Array(hex.length / 2);
