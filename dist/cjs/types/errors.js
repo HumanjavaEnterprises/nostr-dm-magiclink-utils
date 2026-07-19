@@ -1,7 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NostrError = exports.NostrErrorCode = void 0;
 /**
  * Custom error class for Nostr-related errors
  */
-export var NostrErrorCode;
+var NostrErrorCode;
 (function (NostrErrorCode) {
     NostrErrorCode["INVALID_CONFIG"] = "INVALID_CONFIG";
     NostrErrorCode["RELAY_ERROR"] = "RELAY_ERROR";
@@ -15,12 +18,12 @@ export var NostrErrorCode;
     NostrErrorCode["TOKEN_GENERATION_ERROR"] = "TOKEN_GENERATION_ERROR";
     NostrErrorCode["GENERAL_ERROR"] = "GENERAL_ERROR";
     NostrErrorCode["INVALID_PARAMETERS"] = "INVALID_PARAMETERS";
-})(NostrErrorCode || (NostrErrorCode = {}));
+})(NostrErrorCode || (exports.NostrErrorCode = NostrErrorCode = {}));
 /**
  * Custom error class for Nostr-related errors
  * Extends the base Error class with additional Nostr-specific properties
  */
-export class NostrError extends Error {
+class NostrError extends Error {
     code;
     originalError;
     /**
@@ -36,4 +39,5 @@ export class NostrError extends Error {
         this.name = 'NostrError';
     }
 }
+exports.NostrError = NostrError;
 //# sourceMappingURL=errors.js.map

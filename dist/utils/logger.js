@@ -2,9 +2,7 @@
  * @file Logger utility
  * @module utils/logger
  */
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const pino = require('pino');
+import pino from 'pino';
 /**
  * Create a new logger instance
  * @param name Name of the logger

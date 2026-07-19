@@ -1,6 +1,7 @@
 import { NostrServiceInterface, MagicLinkServiceInterface } from '../types/service.js';
 import { MagicLinkConfig, SendMagicLinkOptions, MagicLinkResponse } from '../types/config.js';
 import { Logger } from 'pino';
+import { ConsumedTokenStore } from './consumed-token-store.js';
 /**
  * Manager for handling magic link authentication
  * Manages generation, sending, and verification of magic links through Nostr protocol
@@ -10,9 +11,12 @@ export declare class MagicLinkManager implements MagicLinkServiceInterface {
     private readonly config;
     private readonly logger;
     /**
-     * Tracks consumed token JTIs to prevent replay attacks.
-     * Maps jti -> expiry timestamp (seconds since epoch).
-     * Expired entries are periodically cleaned up during verification.
+     * Store of consumed token JTIs used to prevent replay attacks.
+     *
+     * Defaults to an in-memory store (single-instance only). Inject a
+     * shared/persistent {@link ConsumedTokenStore} (e.g. Redis/DB) via the
+     * constructor for multi-instance or serverless deployments — otherwise replay
+     * protection does not survive restarts or span instances. See README.
      */
     private readonly consumedTokens;
     private readonly defaultTemplate;
@@ -21,8 +25,12 @@ export declare class MagicLinkManager implements MagicLinkServiceInterface {
      * @param nostrService - Service for handling Nostr protocol operations
      * @param config - Configuration for magic link functionality
      * @param logger - Optional logger instance. If not provided, creates a new logger
+     * @param consumedTokenStore - Optional pluggable store for consumed token JTIs
+     *   (replay protection). Defaults to an in-memory store suitable only for
+     *   single-instance deployments; inject a shared/persistent implementation for
+     *   multi-instance or serverless environments.
      */
-    constructor(nostrService: NostrServiceInterface, config: MagicLinkConfig, logger?: Logger);
+    constructor(nostrService: NostrServiceInterface, config: MagicLinkConfig, logger?: Logger, consumedTokenStore?: ConsumedTokenStore);
     /**
      * Sends a magic link to a recipient via Nostr direct message
      * @param options - Options for sending the magic link
@@ -52,8 +60,9 @@ export declare class MagicLinkManager implements MagicLinkServiceInterface {
      */
     private generateToken;
     /**
-     * Removes expired entries from the consumed tokens map.
-     * Called during verification to prevent unbounded memory growth.
+     * Asks the consumed-token store to remove expired entries.
+     * Called during verification to prevent unbounded memory growth. Stores with
+     * native TTL (e.g. Redis) may implement this as a no-op.
      */
     private cleanupConsumedTokens;
     /**

@@ -1,3 +1,4 @@
+"use strict";
 /**
  * NIP-04: Encrypted Direct Messages
  * Implements the Nostr protocol for encrypted direct messages
@@ -5,10 +6,15 @@
  *
  * Also supports NIP-44 (Versioned Encrypted Payloads) as an opt-in alternative.
  */
-import { encrypt } from 'nostr-crypto-utils';
-import { encryptNip44 } from '../../nips/nip44.js';
-export const NIP04_KIND = 4;
-export const NIP44_KIND = 44;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NIP44_KIND = exports.NIP04_KIND = void 0;
+exports.createEncryptedDirectMessage = createEncryptedDirectMessage;
+exports.isValidNIP04Event = isValidNIP04Event;
+exports.isValidNIP44Event = isValidNIP44Event;
+const nostr_crypto_utils_1 = require("nostr-crypto-utils");
+const nip44_js_1 = require("../../nips/nip44.js");
+exports.NIP04_KIND = 4;
+exports.NIP44_KIND = 44;
 /**
  * Create an encrypted direct message event (NIP-04 or NIP-44)
  * @param content Message content to encrypt
@@ -18,13 +24,16 @@ export const NIP44_KIND = 44;
  * @param encryptionMode Encryption mode: 'nip04' (default) or 'nip44'
  * @returns Promise resolving to a partial NostrEvent
  */
-export async function createEncryptedDirectMessage(content, recipientPubkey, senderPrivateKey, senderPubkey, encryptionMode = 'nip04') {
+async function createEncryptedDirectMessage(content, recipientPubkey, senderPrivateKey, senderPubkey, encryptionMode = 'nip04') {
     const useNip44 = encryptionMode === 'nip44';
+    // Canonical NIP-04 API: encryptMessage(message, senderPrivKey, recipientPubKey).
     const encryptedContent = useNip44
-        ? await encryptNip44(content, senderPrivateKey, recipientPubkey)
-        : await encrypt(content, senderPrivateKey, recipientPubkey);
+        ? await (0, nip44_js_1.encryptNip44)(content, senderPrivateKey, recipientPubkey)
+        : await (0, nostr_crypto_utils_1.encryptMessage)(content, senderPrivateKey, recipientPubkey);
     return {
-        kind: useNip44 ? NIP44_KIND : NIP04_KIND,
+        // Always emit kind 4 (standard NIP-04 encrypted DM). Kind 44 is not a real
+        // DM event kind and no client recognises it as a direct message.
+        kind: exports.NIP04_KIND,
         pubkey: senderPubkey,
         created_at: Math.floor(Date.now() / 1000),
         tags: [['p', recipientPubkey]],
@@ -36,8 +45,8 @@ export async function createEncryptedDirectMessage(content, recipientPubkey, sen
  * @param event NostrEvent to validate
  * @returns boolean indicating whether the event is a valid NIP-04 event
  */
-export function isValidNIP04Event(event) {
-    return (event.kind === NIP04_KIND &&
+function isValidNIP04Event(event) {
+    return (event.kind === exports.NIP04_KIND &&
         Array.isArray(event.tags) &&
         event.tags.some(tag => tag[0] === 'p' && typeof tag[1] === 'string') &&
         typeof event.content === 'string' &&
@@ -48,8 +57,8 @@ export function isValidNIP04Event(event) {
  * @param event NostrEvent to validate
  * @returns boolean indicating whether the event is a valid NIP-44 event
  */
-export function isValidNIP44Event(event) {
-    return (event.kind === NIP44_KIND &&
+function isValidNIP44Event(event) {
+    return (event.kind === exports.NIP44_KIND &&
         Array.isArray(event.tags) &&
         event.tags.some(tag => tag[0] === 'p' && typeof tag[1] === 'string') &&
         typeof event.content === 'string' &&

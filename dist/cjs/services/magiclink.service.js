@@ -1,21 +1,31 @@
-import { createLogger } from '../utils/logger.js';
-import { NostrError, NostrErrorCode } from '../types/index.js';
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MagicLinkManager = void 0;
+const logger_js_1 = require("../utils/logger.js");
+const index_js_1 = require("../types/index.js");
+const consumed_token_store_js_1 = require("./consumed-token-store.js");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const crypto_1 = __importDefault(require("crypto"));
 /**
  * Manager for handling magic link authentication
  * Manages generation, sending, and verification of magic links through Nostr protocol
  */
-export class MagicLinkManager {
+class MagicLinkManager {
     nostrService;
     config;
     logger;
     /**
-     * Tracks consumed token JTIs to prevent replay attacks.
-     * Maps jti -> expiry timestamp (seconds since epoch).
-     * Expired entries are periodically cleaned up during verification.
+     * Store of consumed token JTIs used to prevent replay attacks.
+     *
+     * Defaults to an in-memory store (single-instance only). Inject a
+     * shared/persistent {@link ConsumedTokenStore} (e.g. Redis/DB) via the
+     * constructor for multi-instance or serverless deployments — otherwise replay
+     * protection does not survive restarts or span instances. See README.
      */
-    consumedTokens = new Map();
+    consumedTokens;
     defaultTemplate = {
         en: 'Click this magic link to login: {{link}}',
         ar: 'انقر فوق هذا الرابط السحري لتسجيل الدخول: {{link}}',
@@ -32,11 +42,16 @@ export class MagicLinkManager {
      * @param nostrService - Service for handling Nostr protocol operations
      * @param config - Configuration for magic link functionality
      * @param logger - Optional logger instance. If not provided, creates a new logger
+     * @param consumedTokenStore - Optional pluggable store for consumed token JTIs
+     *   (replay protection). Defaults to an in-memory store suitable only for
+     *   single-instance deployments; inject a shared/persistent implementation for
+     *   multi-instance or serverless environments.
      */
-    constructor(nostrService, config, logger) {
+    constructor(nostrService, config, logger, consumedTokenStore) {
         this.nostrService = nostrService;
         this.config = config;
-        this.logger = logger || createLogger('MagicLinkManager');
+        this.logger = logger || (0, logger_js_1.createLogger)('MagicLinkManager');
+        this.consumedTokens = consumedTokenStore || new consumed_token_store_js_1.InMemoryConsumedTokenStore();
     }
     /**
      * Sends a magic link to a recipient via Nostr direct message
@@ -48,6 +63,14 @@ export class MagicLinkManager {
     async sendMagicLink(options) {
         try {
             const { recipientPubkey, messageOptions = {} } = options;
+            // Validate recipient public key up front: must be a 64-char hex x-only
+            // pubkey. Catching this here yields a clear error instead of an opaque
+            // failure deep in the crypto/event layer.
+            if (!recipientPubkey ||
+                typeof recipientPubkey !== 'string' ||
+                !/^[0-9a-f]{64}$/i.test(recipientPubkey)) {
+                throw new Error('Invalid recipient public key: expected 64-character hex string');
+            }
             const token = await this.generateToken(recipientPubkey);
             const link = `${this.config.verifyUrl}?token=${token}`;
             const message = this.formatMessage(link, messageOptions);
@@ -57,7 +80,7 @@ export class MagicLinkManager {
             };
         }
         catch (error) {
-            const errorDetails = new NostrError('Failed to send magic link', NostrErrorCode.GENERAL_ERROR, error instanceof Error ? error : undefined);
+            const errorDetails = new index_js_1.NostrError('Failed to send magic link', index_js_1.NostrErrorCode.GENERAL_ERROR, error instanceof Error ? error : undefined);
             throw errorDetails;
         }
     }
@@ -69,20 +92,20 @@ export class MagicLinkManager {
     async verifyMagicLink(token) {
         try {
             // Clean up expired consumed tokens before verification
-            this.cleanupConsumedTokens();
+            await this.cleanupConsumedTokens();
             const secret = this.getJwtSecret();
-            const decoded = jwt.verify(token, secret);
+            const decoded = jsonwebtoken_1.default.verify(token, secret);
             if (!decoded || !decoded.pubkey) {
                 throw new Error('Invalid token payload');
             }
             // Enforce single-use: check if this token's jti has already been consumed
             if (decoded.jti) {
-                if (this.consumedTokens.has(decoded.jti)) {
+                if (await this.consumedTokens.has(decoded.jti)) {
                     throw new Error('Token already used');
                 }
                 // Mark token as consumed with its expiry time for cleanup
                 const expiry = decoded.exp || (Math.floor(Date.now() / 1000) + 900); // fallback 15m
-                this.consumedTokens.set(decoded.jti, expiry);
+                await this.consumedTokens.set(decoded.jti, expiry);
             }
             else {
                 // Tokens without jti are rejected — all tokens generated by this service have jti
@@ -92,7 +115,7 @@ export class MagicLinkManager {
             return decoded.pubkey;
         }
         catch (error) {
-            const errorDetails = new NostrError('Failed to verify magic link', NostrErrorCode.GENERAL_ERROR, error instanceof Error ? error : undefined);
+            const errorDetails = new index_js_1.NostrError('Failed to verify magic link', index_js_1.NostrErrorCode.GENERAL_ERROR, error instanceof Error ? error : undefined);
             throw errorDetails;
         }
     }
@@ -121,14 +144,14 @@ export class MagicLinkManager {
     async generateToken(pubkey) {
         try {
             const secret = this.getJwtSecret();
-            const jti = crypto.randomBytes(16).toString('hex');
+            const jti = crypto_1.default.randomBytes(16).toString('hex');
             // If config.token is a function, call it and include the result as additional payload data
             let additionalData = {};
             if (typeof this.config.token === 'function') {
                 const tokenData = await this.config.token();
                 additionalData = { tokenData };
             }
-            const token = jwt.sign({
+            const token = jsonwebtoken_1.default.sign({
                 pubkey,
                 jti,
                 ...additionalData,
@@ -136,20 +159,19 @@ export class MagicLinkManager {
             return token;
         }
         catch (error) {
-            const errorDetails = new NostrError('Failed to generate token', NostrErrorCode.TOKEN_GENERATION_ERROR, error instanceof Error ? error : undefined);
+            const errorDetails = new index_js_1.NostrError('Failed to generate token', index_js_1.NostrErrorCode.TOKEN_GENERATION_ERROR, error instanceof Error ? error : undefined);
             throw errorDetails;
         }
     }
     /**
-     * Removes expired entries from the consumed tokens map.
-     * Called during verification to prevent unbounded memory growth.
+     * Asks the consumed-token store to remove expired entries.
+     * Called during verification to prevent unbounded memory growth. Stores with
+     * native TTL (e.g. Redis) may implement this as a no-op.
      */
-    cleanupConsumedTokens() {
-        const now = Math.floor(Date.now() / 1000);
-        for (const [jti, expiry] of this.consumedTokens) {
-            if (expiry <= now) {
-                this.consumedTokens.delete(jti);
-            }
+    async cleanupConsumedTokens() {
+        if (this.consumedTokens.cleanup) {
+            const now = Math.floor(Date.now() / 1000);
+            await this.consumedTokens.cleanup(now);
         }
     }
     /**
@@ -167,10 +189,12 @@ export class MagicLinkManager {
             link,
             device: variables.device || ''
         };
-        // Replace all variables in the template
+        // Replace all variables in the template. Use replaceAll so a placeholder
+        // that appears more than once (e.g. {{link}} as visible text and again
+        // inside markup) is fully substituted, not just its first occurrence.
         Object.entries(allVariables).forEach(([key, value]) => {
             const placeholder = `{{${key}}}`;
-            message = message.replace(placeholder, value || '');
+            message = message.replaceAll(placeholder, value || '');
         });
         // Handle RTL text if needed
         if (textDirection === 'rtl') {
@@ -179,4 +203,5 @@ export class MagicLinkManager {
         return message;
     }
 }
+exports.MagicLinkManager = MagicLinkManager;
 //# sourceMappingURL=magiclink.service.js.map

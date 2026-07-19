@@ -1,23 +1,26 @@
+"use strict";
 /**
  * @module protocol/messages
  * @description Message handling for Nostr protocol
  */
-import { createLogger } from '../utils/logger.js';
-import { NostrError, NostrErrorCode } from '../types/errors.js';
-import { encryptMessage as nip04Encrypt } from '../nips/nip04.js';
-import { encryptNip44 } from '../nips/nip44.js';
-import { verifyEvent } from '../nips/nip01.js';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MessageManager = void 0;
+const logger_js_1 = require("../utils/logger.js");
+const errors_js_1 = require("../types/errors.js");
+const nip04_js_1 = require("../nips/nip04.js");
+const nip44_js_1 = require("../nips/nip44.js");
+const nip01_js_1 = require("../nips/nip01.js");
 /**
  * Manages message encryption and verification for Nostr protocol
  * Provides utilities for secure message handling between users
  */
-export class MessageManager {
+class MessageManager {
     /**
      * Logger instance for message handling
      */
     logger;
     constructor() {
-        this.logger = createLogger('MessageManager');
+        this.logger = (0, logger_js_1.createLogger)('MessageManager');
     }
     /**
      * Encrypt a message for a recipient
@@ -31,12 +34,12 @@ export class MessageManager {
     async encryptMessage(content, recipientPubkey, senderPrivateKey, encryptionMode = 'nip04') {
         try {
             if (encryptionMode === 'nip44') {
-                return await encryptNip44(content, senderPrivateKey, recipientPubkey);
+                return await (0, nip44_js_1.encryptNip44)(content, senderPrivateKey, recipientPubkey);
             }
-            return await nip04Encrypt(content, senderPrivateKey, recipientPubkey);
+            return await (0, nip04_js_1.encryptMessage)(content, senderPrivateKey, recipientPubkey);
         }
         catch (error) {
-            throw new NostrError('Failed to encrypt message', NostrErrorCode.ENCRYPTION_FAILED, error);
+            throw new errors_js_1.NostrError('Failed to encrypt message', errors_js_1.NostrErrorCode.ENCRYPTION_FAILED, error);
         }
     }
     /**
@@ -78,7 +81,7 @@ export class MessageManager {
                 return false;
             }
             // Verify the event signature using NIP-01 Schnorr verification
-            const isValid = await verifyEvent(event);
+            const isValid = await (0, nip01_js_1.verifyEvent)(event);
             if (isValid) {
                 this.logger.info('Message verified from: %s', event.pubkey);
             }
@@ -88,8 +91,9 @@ export class MessageManager {
             return isValid;
         }
         catch (error) {
-            throw new NostrError('Failed to verify message', NostrErrorCode.EVENT_VERIFICATION_FAILED, error);
+            throw new errors_js_1.NostrError('Failed to verify message', errors_js_1.NostrErrorCode.EVENT_VERIFICATION_FAILED, error);
         }
     }
 }
+exports.MessageManager = MessageManager;
 //# sourceMappingURL=messages.js.map

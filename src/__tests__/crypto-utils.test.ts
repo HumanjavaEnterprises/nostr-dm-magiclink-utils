@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
-import { encrypt as encryptMessage } from 'nostr-crypto-utils';
+import { encryptMessage } from 'nostr-crypto-utils';
 
-// Mock the crypto utils module
+// Mock the crypto utils module (canonical NIP-04 API)
 vi.mock('nostr-crypto-utils', () => ({
-  encrypt: vi.fn().mockResolvedValue('encrypted_message'),
-  decrypt: vi.fn().mockResolvedValue('decrypted_message'),
+  encryptMessage: vi.fn().mockResolvedValue('encrypted_message'),
+  decryptMessage: vi.fn().mockResolvedValue('decrypted_message'),
   getPublicKeySync: vi.fn().mockReturnValue('mock_pubkey'),
   finalizeEvent: vi.fn().mockResolvedValue({ id: 'mock_id', sig: 'mock_sig' }),
   hexToBytes: vi.fn().mockImplementation((hex: string) => new Uint8Array(hex.length / 2)),
@@ -16,13 +16,13 @@ vi.mock('nostr-crypto-utils', () => ({
 }));
 
 describe('nostr-crypto-utils', () => {
-  it('should encrypt with correct argument order', async () => {
+  it('should encrypt with canonical (message, senderPriv, recipientPub) order', async () => {
     const message = 'test';
     // Use proper 32-byte hex strings
-    const privateKey = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
-    const publicKey = 'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210';
+    const senderPrivateKey = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+    const recipientPublicKey = 'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210';
 
-    const encrypted = await encryptMessage(message, privateKey, publicKey);
+    const encrypted = await encryptMessage(message, senderPrivateKey, recipientPublicKey);
     expect(encrypted).toBe('encrypted_message');
   });
 });

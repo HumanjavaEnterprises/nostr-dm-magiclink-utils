@@ -1,4 +1,4 @@
-import { encrypt as cryptoEncryptMessage, decrypt as cryptoDecryptMessage } from 'nostr-crypto-utils';
+import { encryptMessage as cryptoEncryptMessage, decryptMessage as cryptoDecryptMessage, } from 'nostr-crypto-utils';
 import { NostrError } from '../types/errors.js';
 /**
  * Encrypts a message following NIP-04 specification
@@ -31,7 +31,7 @@ export async function encryptMessage(message, privateKey, publicKey) {
         if (message === '') {
             message = ' ';
         }
-        // Note: encryptMessage expects (message, senderPrivkey, recipientPubkey)
+        // Canonical NIP-04 API: encryptMessage(message, senderPrivkey, recipientPubkey)
         const result = await cryptoEncryptMessage(message, privateKey, publicKey);
         return result;
     }
@@ -66,8 +66,8 @@ export async function decryptMessage(encryptedMessage, privateKey, publicKey) {
         if (!publicKey || typeof publicKey !== 'string' || !/^[a-f0-9]{64}$/i.test(publicKey)) {
             throw new Error('Invalid key format: must be 64 hex characters');
         }
-        // Note: decryptMessage expects (encryptedMessage, senderPubkey, recipientPrivkey)
-        const result = await cryptoDecryptMessage(encryptedMessage, publicKey, privateKey);
+        // Canonical NIP-04 API: decryptMessage(ciphertext, recipientPrivkey, senderPubkey)
+        const result = await cryptoDecryptMessage(encryptedMessage, privateKey, publicKey);
         return result;
     }
     catch (error) {

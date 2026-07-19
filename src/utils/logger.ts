@@ -3,11 +3,8 @@
  * @module utils/logger
  */
 
-import { createRequire } from 'module';
+import pino from 'pino';
 import type { Logger } from 'pino';
-
-const require = createRequire(import.meta.url);
-const pino = require('pino');
 
 /**
  * Create a new logger instance

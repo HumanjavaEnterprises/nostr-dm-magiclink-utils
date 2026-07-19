@@ -21,8 +21,8 @@ vi.mock('nostr-crypto-utils', () => ({
         publicKey: 'test-public-key'
     }),
     validateKeyPair: vi.fn().mockReturnValue(true),
-    encrypt: vi.fn().mockResolvedValue('encrypted-content'),
-    decrypt: vi.fn().mockResolvedValue('decrypted-message'),
+    encryptMessage: vi.fn().mockResolvedValue('encrypted-content'),
+    decryptMessage: vi.fn().mockResolvedValue('decrypted-message'),
     getEventHash: vi.fn().mockReturnValue('test-hash'),
     signEvent: vi.fn().mockReturnValue('test-signature'),
     getPublicKey: vi.fn().mockResolvedValue({ hex: 'test-public-key', bytes: new Uint8Array(32) }),

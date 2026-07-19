@@ -16,9 +16,16 @@
 
 A comprehensive Nostr utility library for implementing secure, user-friendly authentication via magic links in direct messages. Built with TypeScript and following Nostr Improvement Proposals (NIPs) for maximum compatibility and security.
 
+> **Release note — v0.4.0 (staged, pending publish).** Part of the coordinated
+> 2026-07 correctness pass across the Nostr library family, verified against a
+> shared known-answer vector set (NIP-44 v2 / NIP-49 / NIP-19 TLV / BIP-340). This
+> release moves to canonical NIP-04 (via `nostr-crypto-utils` ^0.8.0) and emits
+> standard kind-4 DMs; it is **breaking** — see [CHANGELOG.md](CHANGELOG.md). The
+> family dogfoods only its own libraries — no upstream `nostr-tools` dependency.
+
 ## Features
 
-- 🔐 **NIP-04 Compliant**: Secure, encrypted direct messages following Nostr standards
+- 🔐 **NIP-04 Compliant**: Secure, encrypted direct messages emitted as standard **kind 4** events, using the canonical `nostr-crypto-utils` `encryptMessage` / `decryptMessage` API
 - 🌍 **Rich i18n Support**: 9 languages with RTL support
 - 🔄 **Multi-Relay Support**: Reliable message delivery with automatic failover
 - 🛡️ **Type-Safe**: Full TypeScript support with comprehensive types
@@ -234,6 +241,56 @@ magicLink.on('relay:connected', (relay) => {
 magicLink.on('relay:disconnected', (relay) => {
   logger.warn(`Disconnected from relay: ${relay}`);
 });
+```
+
+## Direct Message Format
+
+Magic links are delivered as **standard NIP-04 encrypted direct messages (kind 4)**,
+so any Nostr client recognises and decrypts them. The default `encryptionMode` is
+`'nip04'`. Setting `encryptionMode: 'nip44'` switches the payload to NIP-44
+(ChaCha20 + HMAC) encryption while still emitting a kind-4 event.
+
+> **Note:** Earlier releases (≤ 0.3.2) emitted the NIP-44 mode under a non-standard
+> kind 44 that no client treated as a DM. As of 0.4.0, all direct messages are
+> kind 4. The modern private-DM standard is **NIP-17** (a kind 14 rumor sealed and
+> gift-wrapped per NIP-59); it is planned as a future enhancement.
+
+## Replay Protection
+
+Magic-link tokens are single-use: each token carries a unique `jti`, and once a
+token is verified its `jti` is recorded so it cannot be redeemed again (until its
+15-minute JWT expiry).
+
+By default this record is kept in an in-memory `Map`
+(`InMemoryConsumedTokenStore`). **This is single-instance only** — replay
+protection does not survive a process restart and is not shared across
+horizontally-scaled instances or serverless invocations. For those deployments,
+inject a shared/persistent store:
+
+```typescript
+import {
+  MagicLinkManager,
+  ConsumedTokenStore,
+} from 'nostr-dm-magiclink-utils';
+
+// Example: back replay protection with your own Redis/DB (keyed on jti + exp)
+class RedisConsumedTokenStore implements ConsumedTokenStore {
+  async has(jti: string): Promise<boolean> {
+    return (await redis.exists(`jti:${jti}`)) === 1;
+  }
+  async set(jti: string, expiry: number): Promise<void> {
+    const ttl = Math.max(1, expiry - Math.floor(Date.now() / 1000));
+    await redis.set(`jti:${jti}`, '1', 'EX', ttl);
+  }
+  // cleanup is optional when the store has native TTL
+}
+
+const manager = new MagicLinkManager(
+  nostrService,
+  magicLinkConfig,
+  undefined, // logger
+  new RedisConsumedTokenStore(),
+);
 ```
 
 ## Security Best Practices

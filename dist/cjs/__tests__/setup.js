@@ -1,33 +1,35 @@
-import { config } from 'dotenv';
-import { beforeAll, afterAll, vi } from 'vitest';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const dotenv_1 = require("dotenv");
+const vitest_1 = require("vitest");
 // Load environment variables
-config();
+(0, dotenv_1.config)();
 // Set test environment variables
 process.env.NODE_ENV = 'test';
 process.env.PORT = '3003';
 process.env.JWT_SECRET = 'test-jwt-secret';
 process.env.MAGIC_LINK_BASE_URL = 'http://localhost:3003/auth/magiclink/verify';
 // Mock console methods
-global.console.log = vi.fn();
-global.console.error = vi.fn();
-global.console.warn = vi.fn();
-global.console.info = vi.fn();
+global.console.log = vitest_1.vi.fn();
+global.console.error = vitest_1.vi.fn();
+global.console.warn = vitest_1.vi.fn();
+global.console.info = vitest_1.vi.fn();
 // Mock timers
-vi.useFakeTimers();
+vitest_1.vi.useFakeTimers();
 // Mock crypto-utils functions
-vi.mock('nostr-crypto-utils', () => ({
-    createKeyPair: vi.fn().mockReturnValue({
+vitest_1.vi.mock('nostr-crypto-utils', () => ({
+    createKeyPair: vitest_1.vi.fn().mockReturnValue({
         privateKey: 'test-private-key',
         publicKey: 'test-public-key'
     }),
-    validateKeyPair: vi.fn().mockReturnValue(true),
-    encrypt: vi.fn().mockResolvedValue('encrypted-content'),
-    decrypt: vi.fn().mockResolvedValue('decrypted-message'),
-    getEventHash: vi.fn().mockReturnValue('test-hash'),
-    signEvent: vi.fn().mockReturnValue('test-signature'),
-    getPublicKey: vi.fn().mockResolvedValue({ hex: 'test-public-key', bytes: new Uint8Array(32) }),
-    getPublicKeySync: vi.fn().mockReturnValue('test-public-key'),
-    finalizeEvent: vi.fn().mockImplementation((event) => ({
+    validateKeyPair: vitest_1.vi.fn().mockReturnValue(true),
+    encryptMessage: vitest_1.vi.fn().mockResolvedValue('encrypted-content'),
+    decryptMessage: vitest_1.vi.fn().mockResolvedValue('decrypted-message'),
+    getEventHash: vitest_1.vi.fn().mockReturnValue('test-hash'),
+    signEvent: vitest_1.vi.fn().mockReturnValue('test-signature'),
+    getPublicKey: vitest_1.vi.fn().mockResolvedValue({ hex: 'test-public-key', bytes: new Uint8Array(32) }),
+    getPublicKeySync: vitest_1.vi.fn().mockReturnValue('test-public-key'),
+    finalizeEvent: vitest_1.vi.fn().mockImplementation((event) => ({
         id: 'test-event-id',
         pubkey: event.pubkey || 'test-public-key',
         created_at: event.created_at || Math.floor(Date.now() / 1000),
@@ -36,7 +38,7 @@ vi.mock('nostr-crypto-utils', () => ({
         content: event.content || '',
         sig: 'test-signature',
     })),
-    hexToBytes: vi.fn().mockImplementation((hex) => {
+    hexToBytes: vitest_1.vi.fn().mockImplementation((hex) => {
         const bytes = new Uint8Array(hex.length / 2);
         for (let i = 0; i < hex.length; i += 2) {
             bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
@@ -44,27 +46,27 @@ vi.mock('nostr-crypto-utils', () => ({
         return bytes;
     }),
     nip44: {
-        getConversationKey: vi.fn().mockReturnValue(new Uint8Array(32)),
-        encrypt: vi.fn().mockImplementation((plaintext) => `nip44_encrypted_${plaintext}`),
-        decrypt: vi.fn().mockImplementation(() => 'nip44_decrypted_message'),
+        getConversationKey: vitest_1.vi.fn().mockReturnValue(new Uint8Array(32)),
+        encrypt: vitest_1.vi.fn().mockImplementation((plaintext) => `nip44_encrypted_${plaintext}`),
+        decrypt: vitest_1.vi.fn().mockImplementation(() => 'nip44_decrypted_message'),
     },
 }));
 // Mock pino logger
-vi.mock('pino', () => {
+vitest_1.vi.mock('pino', () => {
     const mockLogger = {
-        info: vi.fn(),
-        error: vi.fn(),
-        warn: vi.fn(),
-        debug: vi.fn(),
-        child: vi.fn().mockReturnThis()
+        info: vitest_1.vi.fn(),
+        error: vitest_1.vi.fn(),
+        warn: vitest_1.vi.fn(),
+        debug: vitest_1.vi.fn(),
+        child: vitest_1.vi.fn().mockReturnThis()
     };
-    return vi.fn().mockReturnValue(mockLogger);
+    return vitest_1.vi.fn().mockReturnValue(mockLogger);
 });
-beforeAll(() => {
+(0, vitest_1.beforeAll)(() => {
     // Any global setup
 });
-afterAll(() => {
+(0, vitest_1.afterAll)(() => {
     // Any global cleanup
-    vi.clearAllMocks();
+    vitest_1.vi.clearAllMocks();
 });
 //# sourceMappingURL=setup.js.map

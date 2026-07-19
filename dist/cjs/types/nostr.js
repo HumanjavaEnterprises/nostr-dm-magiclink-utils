@@ -1,12 +1,28 @@
+"use strict";
 /**
  * Core Nostr types for magic link functionality
  */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NostrErrorCode = exports.NostrError = void 0;
+exports.isSignedNostrEvent = isSignedNostrEvent;
+exports.isSignEventParams = isSignEventParams;
+exports.isEventParams = isEventParams;
+exports.isNostrFilter = isNostrFilter;
+exports.isNostrRelay = isNostrRelay;
+exports.isNostrKeyPair = isNostrKeyPair;
+exports.isEncryptedMessage = isEncryptedMessage;
+exports.isNostrMessage = isNostrMessage;
+exports.isNostrSubscription = isNostrSubscription;
+exports.isErrorDetails = isErrorDetails;
+exports.isPartialNostrEvent = isPartialNostrEvent;
+exports.isNostrWSClient = isNostrWSClient;
+exports.isNostrEvent = isNostrEvent;
 /**
  * Type guard to check if an object is a valid SignedNostrEvent
  * @param obj The object to check
  * @returns True if the object is a valid SignedNostrEvent
  */
-export function isSignedNostrEvent(obj) {
+function isSignedNostrEvent(obj) {
     if (!isNostrEvent(obj)) {
         return false;
     }
@@ -18,7 +34,7 @@ export function isSignedNostrEvent(obj) {
  * @param obj The object to check
  * @returns True if the object is a valid SignEventParams
  */
-export function isSignEventParams(obj) {
+function isSignEventParams(obj) {
     if (!isEventParams(obj)) {
         return false;
     }
@@ -30,7 +46,7 @@ export function isSignEventParams(obj) {
  * @param obj The object to check
  * @returns True if the object is a valid EventParams
  */
-export function isEventParams(obj) {
+function isEventParams(obj) {
     if (!obj || typeof obj !== 'object') {
         return false;
     }
@@ -46,7 +62,7 @@ export function isEventParams(obj) {
  * @param obj The object to check
  * @returns True if the object is a valid NostrFilter
  */
-export function isNostrFilter(obj) {
+function isNostrFilter(obj) {
     if (!obj || typeof obj !== 'object') {
         return false;
     }
@@ -63,7 +79,7 @@ export function isNostrFilter(obj) {
  * @param obj The object to check
  * @returns True if the object is a valid NostrRelay
  */
-export function isNostrRelay(obj) {
+function isNostrRelay(obj) {
     if (!obj || typeof obj !== 'object') {
         return false;
     }
@@ -77,7 +93,7 @@ export function isNostrRelay(obj) {
  * @param obj The object to check
  * @returns True if the object is a valid NostrKeyPair
  */
-export function isNostrKeyPair(obj) {
+function isNostrKeyPair(obj) {
     if (!obj || typeof obj !== 'object') {
         return false;
     }
@@ -91,7 +107,7 @@ export function isNostrKeyPair(obj) {
  * @param obj The object to check
  * @returns True if the object is a valid EncryptedMessage
  */
-export function isEncryptedMessage(obj) {
+function isEncryptedMessage(obj) {
     if (!obj || typeof obj !== 'object') {
         return false;
     }
@@ -107,7 +123,7 @@ export function isEncryptedMessage(obj) {
  * @param obj The object to check
  * @returns True if the object is a valid NostrMessage
  */
-export function isNostrMessage(obj) {
+function isNostrMessage(obj) {
     if (!obj || typeof obj !== 'object') {
         return false;
     }
@@ -120,7 +136,7 @@ export function isNostrMessage(obj) {
  * @param obj The object to check
  * @returns True if the object is a valid NostrSubscription
  */
-export function isNostrSubscription(obj) {
+function isNostrSubscription(obj) {
     if (!obj || typeof obj !== 'object') {
         return false;
     }
@@ -134,7 +150,7 @@ export function isNostrSubscription(obj) {
  * @param obj The object to check
  * @returns True if the object is a valid ErrorDetails
  */
-export function isErrorDetails(obj) {
+function isErrorDetails(obj) {
     if (!obj || typeof obj !== 'object') {
         return false;
     }
@@ -149,7 +165,7 @@ export function isErrorDetails(obj) {
  * @param obj The object to check
  * @returns True if the object is a valid Partial<NostrEvent>
  */
-export function isPartialNostrEvent(obj) {
+function isPartialNostrEvent(obj) {
     if (!obj || typeof obj !== 'object') {
         return false;
     }
@@ -163,7 +179,7 @@ export function isPartialNostrEvent(obj) {
 /**
  * Custom error class for Nostr-related errors
  */
-export class NostrError extends Error {
+class NostrError extends Error {
     code;
     details;
     /**
@@ -179,7 +195,8 @@ export class NostrError extends Error {
         this.name = 'NostrError';
     }
 }
-export var NostrErrorCode;
+exports.NostrError = NostrError;
+var NostrErrorCode;
 (function (NostrErrorCode) {
     NostrErrorCode["INVALID_KEY"] = "INVALID_KEY";
     NostrErrorCode["ENCRYPTION_FAILED"] = "ENCRYPTION_FAILED";
@@ -197,13 +214,13 @@ export var NostrErrorCode;
     NostrErrorCode["TOKEN_GENERATION_ERROR"] = "TOKEN_GENERATION_ERROR";
     NostrErrorCode["CONFIGURATION_ERROR"] = "CONFIGURATION_ERROR";
     NostrErrorCode["GENERAL_ERROR"] = "GENERAL_ERROR";
-})(NostrErrorCode || (NostrErrorCode = {}));
+})(NostrErrorCode || (exports.NostrErrorCode = NostrErrorCode = {}));
 /**
  * Type guard to check if an object is a valid NostrWSClient
  * @param obj The object to check
  * @returns True if the object is a valid NostrWSClient
  */
-export function isNostrWSClient(obj) {
+function isNostrWSClient(obj) {
     if (!obj || typeof obj !== 'object') {
         return false;
     }
@@ -217,7 +234,7 @@ export function isNostrWSClient(obj) {
  * @param obj The object to check
  * @returns True if the object is a valid NostrEvent
  */
-export function isNostrEvent(obj) {
+function isNostrEvent(obj) {
     if (!obj || typeof obj !== 'object') {
         return false;
     }

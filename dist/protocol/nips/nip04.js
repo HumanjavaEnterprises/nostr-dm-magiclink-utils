@@ -5,7 +5,7 @@
  *
  * Also supports NIP-44 (Versioned Encrypted Payloads) as an opt-in alternative.
  */
-import { encrypt } from 'nostr-crypto-utils';
+import { encryptMessage } from 'nostr-crypto-utils';
 import { encryptNip44 } from '../../nips/nip44.js';
 export const NIP04_KIND = 4;
 export const NIP44_KIND = 44;
@@ -20,11 +20,14 @@ export const NIP44_KIND = 44;
  */
 export async function createEncryptedDirectMessage(content, recipientPubkey, senderPrivateKey, senderPubkey, encryptionMode = 'nip04') {
     const useNip44 = encryptionMode === 'nip44';
+    // Canonical NIP-04 API: encryptMessage(message, senderPrivKey, recipientPubKey).
     const encryptedContent = useNip44
         ? await encryptNip44(content, senderPrivateKey, recipientPubkey)
-        : await encrypt(content, senderPrivateKey, recipientPubkey);
+        : await encryptMessage(content, senderPrivateKey, recipientPubkey);
     return {
-        kind: useNip44 ? NIP44_KIND : NIP04_KIND,
+        // Always emit kind 4 (standard NIP-04 encrypted DM). Kind 44 is not a real
+        // DM event kind and no client recognises it as a direct message.
+        kind: NIP04_KIND,
         pubkey: senderPubkey,
         created_at: Math.floor(Date.now() / 1000),
         tags: [['p', recipientPubkey]],
