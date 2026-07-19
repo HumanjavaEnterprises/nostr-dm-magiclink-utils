@@ -16,6 +16,13 @@
 
 A comprehensive Nostr utility library for implementing secure, user-friendly authentication via magic links in direct messages. Built with TypeScript and following Nostr Improvement Proposals (NIPs) for maximum compatibility and security.
 
+> **Release note — v0.4.0 (staged, pending publish).** Part of the coordinated
+> 2026-07 correctness pass across the Nostr library family, verified against a
+> shared known-answer vector set (NIP-44 v2 / NIP-49 / NIP-19 TLV / BIP-340). This
+> release moves to canonical NIP-04 (via `nostr-crypto-utils` ^0.8.0) and emits
+> standard kind-4 DMs; it is **breaking** — see [CHANGELOG.md](CHANGELOG.md). The
+> family dogfoods only its own libraries — no upstream `nostr-tools` dependency.
+
 ## Features
 
 - 🔐 **NIP-04 Compliant**: Secure, encrypted direct messages emitted as standard **kind 4** events, using the canonical `nostr-crypto-utils` `encryptMessage` / `decryptMessage` API
